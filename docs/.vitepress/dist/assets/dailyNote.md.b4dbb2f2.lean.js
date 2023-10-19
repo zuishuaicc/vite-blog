@@ -1,0 +1,1 @@
+import{_ as a,o as t,c as e,Q as p}from"./chunks/framework.df4a10e8.js";const u=JSON.parse('{"title":"vscode下载CDN","description":"","frontmatter":{},"headers":[],"relativePath":"dailyNote.md","filePath":"dailyNote.md"}'),s={name:"dailyNote.md"},r=p("",18),i=[r];function n(o,c,l,m,_,d){return t(),e("div",null,i)}const g=a(s,[["render",n]]);export{u as __pageData,g as default};
