@@ -14,7 +14,7 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Examples', link: '/markdown-examples' },
-      {text:'常用算法',link:'/algorithms.md'}
+      {text:'常用算法',link:'/algorithms'}
     ],
 
     sidebar: [
@@ -23,10 +23,10 @@ export default defineConfig({
         items: [
           { text: 'Markdown Examples', link: '/markdown-examples' },
           { text: 'Runtime API Examples', link: '/api-examples' },
-          {text:'常用算法',link:'/algorithms.md'},
-          {text:'样式合集',link:'/styleCollection.md'},
-          {text:'vite.config配置',link:'/viteConfig.md'},
-          {text:'日常杂记',link:'/dailyNote.md'},
+          {text:'常用算法',link:'/algorithms'},
+          {text:'样式合集',link:'/styleCollection'},
+          {text:'vite.config配置',link:'/viteConfig'},
+          {text:'日常杂记',link:'/dailyNote'},
         ]
       }
     ],
