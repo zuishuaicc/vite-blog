@@ -4,6 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "日常博客",
   description: "write daily note",
+  base: '/vite-blog/',
   head: [
     // 添加图标
     ['link', { rel: 'icon', href: '/future.png' }]
