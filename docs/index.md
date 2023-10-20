@@ -3,7 +3,7 @@
 layout: home
 
 hero:
-  name: "cc日常博客"
+  name: "日常博客"
   text: "记录日常学习遇到的问题与解决方案"
   tagline: do everything you love to do
   actions:

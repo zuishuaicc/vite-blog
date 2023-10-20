@@ -4,7 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "日常博客",
   description: "write daily note",
-  base: '/vite-blog',
+  base: '/vite-blog/',
   head: [
     // 添加图标
     ['link', { rel: 'icon', href: '/future.png' }]
@@ -13,13 +13,13 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Examples', link: '/markdown-examples' },
+      { text: '文档内容', link: '/markdown-examples' },
       {text:'常用算法',link:'/algorithms'}
     ],
 
     sidebar: [
       {
-        text: 'Examples',
+        text: '文档内容',
         items: [
           { text: 'Markdown Examples', link: '/markdown-examples' },
           { text: 'Runtime API Examples', link: '/api-examples' },
@@ -34,5 +34,8 @@ export default defineConfig({
     socialLinks: [
       { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
     ]
+  },
+  markdown: {
+    lineNumbers: true
   }
 })
