@@ -34,5 +34,5 @@ color 0a
 cd %ENV_HOME%
 ::需要启动的程序名字 后接配置
 redis-server.exe
-redis.windows.conf
+redis.windows.yml
 ```

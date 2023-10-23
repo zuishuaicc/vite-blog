@@ -22,7 +22,7 @@ mongod -f mongodb.cfg --fork 开启
 mongod -f mongodb.cfg --shutdown 关闭
 ```
 # mongodb配置文件
-```conf
+```yml
 dbpath=/usr/local/src/mongodb/data
 logpath=/usr/local/src/mongodb/logs/mongodb.log
 bind_ip=0.0.0.0
@@ -33,7 +33,7 @@ maxConns=5000
 auth=true
 ```
 # nginx配置文件
-```conf
+```yml
 #user  nobody;
 worker_processes  1;
 

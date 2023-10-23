@@ -1,1 +1,0 @@
-import{_ as s,o as n,c as a,Q as l}from"./chunks/framework.808cf4e8.js";const d=JSON.parse('{"title":"防火墙指令","description":"","frontmatter":{},"headers":[],"relativePath":"linux.md","filePath":"linux.md"}'),e={name:"linux.md"},p=l("",12),o=[p];function r(c,t,i,y,b,m){return n(),a("div",null,o)}const E=s(e,[["render",r]]);export{d as __pageData,E as default};
