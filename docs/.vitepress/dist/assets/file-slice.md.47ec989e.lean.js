@@ -1,0 +1,1 @@
+import{_ as s,o as n,c as a,Q as l}from"./chunks/framework.808cf4e8.js";const b=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"file-slice.md","filePath":"file-slice.md"}'),p={name:"file-slice.md"},o=l("",1),e=[o];function c(r,t,E,y,i,F){return n(),a("div",null,e)}const m=s(p,[["render",c]]);export{b as __pageData,m as default};

@@ -1,0 +1,1 @@
+import{_ as s,o as n,c as a,Q as l}from"./chunks/framework.808cf4e8.js";const u=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"excel.md","filePath":"excel.md"}'),p={name:"excel.md"},o=l("",8),e=[o];function c(r,t,E,y,i,F){return n(),a("div",null,e)}const m=s(p,[["render",c]]);export{u as __pageData,m as default};

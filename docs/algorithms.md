@@ -1,43 +1,43 @@
+**替换树状穿梭框数据源中的key名字**
 ```js
-//替换树状穿梭框数据源中的key名字
 const replaceKey = (list) => {
-        const arr = []
-        list.forEach(item => {
-          const obj = {}
-          for (const k in item) {
-            if (item[k] instanceof Array) {
-              obj[k] = replaceKey(item[k])
-            } else {
-              if (k === 'name') {
-                obj['title'] = item[k]
-              } else if (k === 'bzkid') {
-                obj['key'] = item[k]
-              } else {
-                obj[k] = item[k]
-              }
-            }
-          }
-          arr.push(obj)
-        })
-        return arr
-      }
-   replaceKey(arr)
- // 扁平化树状数据源
-      const flatten = (list = []) => {
-        let newList = []
-        list.forEach(item => {
-          const {children,...rest} = item
-          newList.push(rest)
-          if(children&&children.length){
-           newList=[...newList,...flatten(children)] 
-          }
-        })
-        return newList
-      }
+     const arr = []
+     list.forEach(item => {
+       const obj = {}
+       for (const k in item) {
+         if (item[k] instanceof Array) {
+           obj[k] = replaceKey(item[k])
+         } else {
+           if (k === 'name') {
+             obj['title'] = item[k]
+           } else if (k === 'bzkid') {
+             obj['key'] = item[k]
+           } else {
+             obj[k] = item[k]
+           }
+         }
+       }
+       arr.push(obj)
+     })
+     return arr
+   }
 ```
-
+**扁平化树状数据源**
 ```js
-//接收文件流下载文件
+const flatten = (list = []) => {
+  let newList = []
+  list.forEach(item => {
+    const {children,...rest} = item
+    newList.push(rest)
+    if(children&&children.length){
+     newList=[...newList,...flatten(children)] 
+    }
+  })
+  return newList
+}
+```
+**接收文件流下载文件**
+```js
 async download (record) {
       var params = {
         uuid: record.uuid
@@ -65,14 +65,14 @@ async download (record) {
     },
 ```
 
-文件流转blob
+**文件流转blob**
 
 ```js
 const blob=new Blob([res],{type:'application/vnd.ms-excel'})//xlxs
 const blob=new Blob([res],{type:'zip;charset=utf-8'})//zip
 ```
 
-blob转base64算法
+**blob转base64算法**
 
 ```js
 getBase64 (file) {
@@ -85,7 +85,7 @@ getBase64 (file) {
     }
 ```
 
-base64转二进制流
+**base64转二进制流**
 
 ```js
 //base64解析为二进制 入参base64t图片
@@ -104,7 +104,7 @@ const base64Parser = (dataURL) => {
 }
 ```
 
-获取base64图片的属性
+**获取base64图片的属性**
 
 ```js
 let newImage = new Image()
@@ -119,7 +119,7 @@ newImage.onload = () => {
 }
 ```
 
-下划线转驼峰
+**下划线与驼峰互转**
 
 ```js
 // 下划线转换驼峰
@@ -135,7 +135,7 @@ function toLine(name) {
  
 ```
 
-截取去除路由base,并在新窗口中打开路由
+**截取去除路由base,并在新窗口中打开路由**
 
 ```js
 let path = 需要跳转的路由
@@ -144,12 +144,13 @@ base = base.substring(0,base.indexOf('基路由地址'))
 window.open(base+path,'_blank')
 ```
 
-根据id找出树结构数据中的对应项
+**根据id找出树结构数据中的对应项**
 
 ```js
 @输入参数 id： 要查找数据对应的id
 @输入参数 list： 要查询的树形结构数组
 @输出：返回该数据或null
+// 方法一
 function findItemById(id, list) {
   let res = list.find(item => item.id == id)
   if (res) {
@@ -175,6 +176,7 @@ function findItemById(id, list) {
    return res 
   }
 }
+// 方法二
 function findItemById(id: string, list: any) {
   for (const node of list) {
     if (node.id === id) {
@@ -192,7 +194,7 @@ function findItemById(id: string, list: any) {
 
 ```
 
-实现文件上传进度
+**实现文件上传进度**
 
 ```js
 // 文件上传接口，添加onUploadProgress获取上传进度信息
@@ -217,7 +219,7 @@ const uploadEvent = (progressEvent) => {
         await apiImport(formData, uploadEvent)
 ```
 
-vue2全局注册扩展api组件
+**vue2全局注册扩展api组件**
 
 ```js
 import Vue from 'vue'
@@ -236,7 +238,7 @@ export default MyPlugin
 
 ```
 
-绝对路径/相对路径判断
+**绝对路径/相对路径判断**
 
 ```js
 //判断绝对路径
@@ -249,13 +251,13 @@ export function combineURL(baseURL: string, relativeURL?: string): string {
 }
 ```
 
-去除字符串中的HTML标签
+**去除字符串中的HTML标签**
 
 ```js
 const pureStr = str.replace(/<[^<]*>/g,'')
 ```
 
-读取剪切板上的excel数据
+**读取剪切板上的excel数据**
 
 ```js
 document.addEventListener('paste', event => {
@@ -276,7 +278,7 @@ document.addEventListener('paste', event => {
 })
 ```
 
-// 过滤树节点菜单数据
+**过滤树节点菜单数据**
 
 ```js
 function filterTreeData(
@@ -297,7 +299,7 @@ function filterTreeData(
 }
 ```
 
-//h5判断ios和Android
+**h5判断ios和Android**
 
 ```js
  // 判断iOS 
@@ -314,7 +316,7 @@ export const isAndroid = ()=>{
 }
 ```
 
-//一维数组转二位数组
+**一维数组转二位数组**
 
 ```js
 const arrTrans = (num, arr) => {
@@ -330,7 +332,7 @@ const arrTrans = (num, arr) => {
 }
 ```
 
-//批量压缩下载文件
+**批量压缩下载文件**
 
 ```js
 /**

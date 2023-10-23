@@ -1,0 +1,1 @@
+import{_ as s,o as n,c as a,Q as l}from"./chunks/framework.808cf4e8.js";const u=JSON.parse('{"title":"可拖拽canvas","description":"","frontmatter":{},"headers":[],"relativePath":"canvas.md","filePath":"canvas.md"}'),p={name:"canvas.md"},o=l("",4),e=[o];function c(t,r,E,y,i,F){return n(),a("div",null,e)}const m=s(p,[["render",c]]);export{u as __pageData,m as default};
