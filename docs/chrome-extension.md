@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 ```json
 {
   //chrome插件的版本

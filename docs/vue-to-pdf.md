@@ -1,13 +1,17 @@
-# 安装依赖
+---
+outline: deep
+---
+
+##  安装依赖
 ```bash
 npm i vue-to-pdf --save
 ```
-# 全局注册组件
+##  全局注册组件
 ```js
 import vueToPdf from 'vue-to-pdf';
 Vue.use(vueToPdf);
 ```
-# 组件使用
+##  组件使用
 ```vue
 <script>
 methods:{

@@ -1,1 +1,0 @@
-import{_ as s,o as n,c as a,Q as p}from"./chunks/framework.808cf4e8.js";const m=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"word.md","filePath":"word.md"}'),l={name:"word.md"},o=p("",6),e=[o];function r(c,t,E,y,i,F){return n(),a("div",null,e)}const u=s(l,[["render",r]]);export{m as __pageData,u as default};

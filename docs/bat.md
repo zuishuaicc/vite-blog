@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 ```bat
 ::           --是批处理文件中一种注释语句的方式;
 
@@ -7,7 +11,7 @@ echo off    --执行以后，后面所有的命令均不显示，但本条命令
 echo         --输出语句，相当于system.out.println();
 pause        --作用是使程序暂停，也就是输出“请按任意键继续…”的原因;
 ```
-# 启动mongodb
+## 启动mongodb
 ```bat
 ::启动mongodb的命令
 @echo off
@@ -18,7 +22,7 @@ color 0a
 cd %ENV_HOME%
 mongod.exe --auth --dbpath=d:/MongoDB/data/db
 ```
-# 启动redis
+## 启动redis
 ```bat
 ::启动redis的命令
 @echo off

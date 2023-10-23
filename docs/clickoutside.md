@@ -1,5 +1,9 @@
+---
+outline: deep
+---
+
 # vue自定义clickoutside指令
-**先定义指令js文件**
+## 先定义指令js文件
 ```js
 const clickoutsideContext = '@@clickoutsideContext';
 export default {
@@ -33,11 +37,11 @@ export default {
     },
 };
 ```
-**全局注册directives**
+## 全局注册directives
 ```js
 import onClickOutSide from './clickoutside'
 Vue.directive('clickoutside',onClickOutSide)
 ```
 
-**使用指令** 
+## 使用指令 
 ```v-clickoutside='fn'```

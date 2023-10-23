@@ -1,10 +1,14 @@
+---
+outline: deep
+---
+
 # wx-formdata
 **封装库地址** https://github.com/zlyboy/wx-formdata#readme  
-在小程序中使用formdata上传数据，可实现多文件上传
-##### 也可使用最新的ts版formdata库
+在小程序中使用formdata上传数据，可实现多文件上传  
+**也可使用最新的ts版formdata库**
 https://www.npmjs.com/package/miniprogram-formdata
 
-# 用法
+## 用法
 跟浏览器中的FormData对象类似
 引入js文件
 ```js
@@ -31,7 +35,7 @@ wx.request({
 });
 ```
 
-# 成员函数
+## 成员函数
 ### FormData.append()
 #### 语法
 ```js

@@ -1,4 +1,8 @@
-vite.config.js中配置
+---
+outline: deep
+---
+
+## vite.config.js中配置
 
 ```js
 import vue from '@vitejs/plugin-vue'

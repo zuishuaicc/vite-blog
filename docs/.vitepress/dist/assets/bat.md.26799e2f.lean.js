@@ -1,1 +1,0 @@
-import{_ as s,o as n,c as a,Q as l}from"./chunks/framework.808cf4e8.js";const u=JSON.parse('{"title":"启动mongodb","description":"","frontmatter":{},"headers":[],"relativePath":"bat.md","filePath":"bat.md"}'),p={name:"bat.md"},e=l("",5),o=[e];function c(r,t,i,d,y,b){return n(),a("div",null,o)}const m=s(p,[["render",c]]);export{u as __pageData,m as default};

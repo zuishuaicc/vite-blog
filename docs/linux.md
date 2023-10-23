@@ -1,4 +1,8 @@
-# 防火墙指令
+---
+outline: deep
+---
+
+## 防火墙指令
 ```bash
 firewall-cmd --add-port=1935/tcp --permanent #开放端口
 firewall-cmd --list-all #查看已开放的端口
@@ -7,7 +11,7 @@ firewall-cmd --reload #防火墙重启
 firewall-cmd --query-port=80/tcp #查看指定端口是否开放
 systemctl start firewalld #重启防火墙
 ```
-# 文件操作指令
+## 文件操作指令
 ```bash
 ll #查看所有前端包记录
 rm -rf dist #删除当前包
@@ -16,12 +20,12 @@ mv 初始文件名 改后文件名 #重命名文件
 touch #创建文件
 cp #复制
 ```
-# mongodb 操作
+## mongodb 操作
 ```bash
 mongod -f mongodb.cfg --fork 开启
 mongod -f mongodb.cfg --shutdown 关闭
 ```
-# mongodb配置文件
+## mongodb配置文件
 ```yml
 dbpath=/usr/local/src/mongodb/data
 logpath=/usr/local/src/mongodb/logs/mongodb.log
@@ -32,7 +36,7 @@ fork=true
 maxConns=5000
 auth=true
 ```
-# nginx配置文件
+## nginx配置文件
 ```yml
 #user  nobody;
 worker_processes  1;
@@ -132,7 +136,7 @@ http {
     #}
 }
 ```
-# nginx操作指令
+## nginx操作指令
 ```bash
 nginx:启动
 nginx -s reload #重启

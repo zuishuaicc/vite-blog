@@ -1,4 +1,8 @@
-**替换树状穿梭框数据源中的key名字**
+---
+outline: deep
+---
+
+## 替换树状穿梭框数据源中的key名字
 ```js
 const replaceKey = (list) => {
      const arr = []
@@ -22,7 +26,7 @@ const replaceKey = (list) => {
      return arr
    }
 ```
-**扁平化树状数据源**
+## 扁平化树状数据源
 ```js
 const flatten = (list = []) => {
   let newList = []
@@ -36,7 +40,7 @@ const flatten = (list = []) => {
   return newList
 }
 ```
-**接收文件流下载文件**
+## 接收文件流下载文件
 ```js
 async download (record) {
       var params = {
@@ -65,14 +69,14 @@ async download (record) {
     },
 ```
 
-**文件流转blob**
+## 文件流转blob
 
 ```js
 const blob=new Blob([res],{type:'application/vnd.ms-excel'})//xlxs
 const blob=new Blob([res],{type:'zip;charset=utf-8'})//zip
 ```
 
-**blob转base64算法**
+## blob转base64算法
 
 ```js
 getBase64 (file) {
@@ -85,7 +89,7 @@ getBase64 (file) {
     }
 ```
 
-**base64转二进制流**
+## base64转二进制流
 
 ```js
 //base64解析为二进制 入参base64t图片
@@ -104,7 +108,7 @@ const base64Parser = (dataURL) => {
 }
 ```
 
-**获取base64图片的属性**
+## 获取base64图片的属性
 
 ```js
 let newImage = new Image()
@@ -119,7 +123,7 @@ newImage.onload = () => {
 }
 ```
 
-**下划线与驼峰互转**
+## 下划线与驼峰互转
 
 ```js
 // 下划线转换驼峰
@@ -135,7 +139,7 @@ function toLine(name) {
  
 ```
 
-**截取去除路由base,并在新窗口中打开路由**
+## 截取去除路由base,并在新窗口中打开路由
 
 ```js
 let path = 需要跳转的路由
@@ -144,7 +148,7 @@ base = base.substring(0,base.indexOf('基路由地址'))
 window.open(base+path,'_blank')
 ```
 
-**根据id找出树结构数据中的对应项**
+## 根据id找出树结构数据中的对应项
 
 ```js
 @输入参数 id： 要查找数据对应的id
@@ -194,7 +198,7 @@ function findItemById(id: string, list: any) {
 
 ```
 
-**实现文件上传进度**
+## 实现文件上传进度
 
 ```js
 // 文件上传接口，添加onUploadProgress获取上传进度信息
@@ -219,7 +223,7 @@ const uploadEvent = (progressEvent) => {
         await apiImport(formData, uploadEvent)
 ```
 
-**vue2全局注册扩展api组件**
+## vue2全局注册扩展api组件
 
 ```js
 import Vue from 'vue'
@@ -238,7 +242,7 @@ export default MyPlugin
 
 ```
 
-**绝对路径/相对路径判断**
+## 绝对路径/相对路径判断
 
 ```js
 //判断绝对路径
@@ -251,13 +255,13 @@ export function combineURL(baseURL: string, relativeURL?: string): string {
 }
 ```
 
-**去除字符串中的HTML标签**
+## 去除字符串中的HTML标签
 
 ```js
 const pureStr = str.replace(/<[^<]*>/g,'')
 ```
 
-**读取剪切板上的excel数据**
+## 读取剪切板上的excel数据
 
 ```js
 document.addEventListener('paste', event => {
@@ -278,7 +282,7 @@ document.addEventListener('paste', event => {
 })
 ```
 
-**过滤树节点菜单数据**
+## 过滤树节点菜单数据
 
 ```js
 function filterTreeData(
@@ -299,7 +303,7 @@ function filterTreeData(
 }
 ```
 
-**h5判断ios和Android**
+## h5判断ios和Android
 
 ```js
  // 判断iOS 
@@ -316,7 +320,7 @@ export const isAndroid = ()=>{
 }
 ```
 
-**一维数组转二位数组**
+## 一维数组转二位数组
 
 ```js
 const arrTrans = (num, arr) => {
@@ -332,10 +336,10 @@ const arrTrans = (num, arr) => {
 }
 ```
 
-**批量压缩下载文件**
+## 批量压缩下载文件
 
 ```js
-/**
+/
  * 获取文件
  * @param url
  * @returns {Promise<any>}
@@ -356,7 +360,7 @@ const getBlob = (url) => {
   })
 }
 
-/**
+/
  * 批量打包zip包下载
  * @param urlArr Array [{url: 下载文件的路径, fileName: 下载文件名称}]
  * @param filename zip文件名

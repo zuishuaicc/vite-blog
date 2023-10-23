@@ -1,0 +1,1 @@
+import{_ as s,o as n,c as a,Q as l}from"./chunks/framework.808cf4e8.js";const d=JSON.parse('{"title":"","description":"","frontmatter":{"outline":"deep"},"headers":[],"relativePath":"drag.md","filePath":"drag.md"}'),p={name:"drag.md"},o=l("",2),e=[o];function t(c,r,E,y,i,F){return n(),a("div",null,e)}const b=s(p,[["render",t]]);export{d as __pageData,b as default};

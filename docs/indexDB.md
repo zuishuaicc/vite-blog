@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 ```js
   // 打开数据库
   var request = window.indexedDB.open(databaseName, version)

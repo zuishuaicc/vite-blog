@@ -1,4 +1,8 @@
-# 可拖拽canvas
+---
+outline: deep
+---
+
+## 可拖拽canvas
 ```html
 <!DOCTYPE html>
 <html>
@@ -100,7 +104,7 @@
 </body>
 </html>
 ```
-# canvas添加水印
+## canvas添加水印
 ```html
 <!DOCTYPE html>
 <html>

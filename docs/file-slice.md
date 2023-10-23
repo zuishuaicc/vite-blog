@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 ```vue
 <template>
     <div class="file-upload">

@@ -1,8 +1,12 @@
-# 安装依赖
+---
+outline: deep
+---
+
+##  安装依赖
 ```bash
 npm install vue-draggable-resizable --save
 ```
-# 封装ant-design-vue可拖拽表格
+##  封装ant-design-vue可拖拽表格
 ```js
 // 可选行表格//mixin混入使用
 import Vue from 'vue'
@@ -181,7 +185,7 @@ export {
 }
 
 ```
-# vue组件中使用
+##  vue组件中使用
 ```vue
 <script>
 import { initDrag } from '@/utils/drag'

@@ -1,4 +1,8 @@
-**安装依赖**
+---
+outline: deep
+---
+
+## 安装依赖
 ```bash
 -- 安装 docxtemplater
 npm install docxtemplater pizzip  --save
@@ -16,7 +20,7 @@ npm install file-saver --save
 npm docxtemplater-image-module-free --save
 
 ```
-**先定义一个word处理方法**
+## 先定义一个word处理方法
 ```js
 import PizZip from 'pizzip'
 import Docxtemplater from 'docxtemplater'
@@ -119,7 +123,7 @@ export const creatWord = (data,name,template) => {
   })
 }
 ```
-**在vue中使用**
+## 在vue中使用
 ```vue
 
 <script>

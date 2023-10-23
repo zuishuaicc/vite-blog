@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 ```js
  // 使用electron-builder打包需要配置"build"
  "build": {

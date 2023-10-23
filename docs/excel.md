@@ -1,4 +1,8 @@
-**安装依赖**
+---
+outline: deep
+---
+
+## 安装依赖
 ```bash
 -- 安装 FileSaver
 npm install file-saver --save
@@ -7,7 +11,7 @@ npm install file-saver --save
 npm install xlsx --save
 
 ```
-**先定义一个excel处理方法**
+## 先定义一个excel处理方法
 ```js
 import { saveAs } from 'file-saver'
 import * as XLSX from 'xlsx'
@@ -273,7 +277,7 @@ export function export_json_to_excel({
 }
 
 ```
-**在vue中使用导出excel**
+## 在vue中使用导出excel
 ```vue
 
 <script>
@@ -340,7 +344,7 @@ method:{
 </script>
 
 ```
-**在vue中使用导入excel**
+## 在vue中使用导入excel
 ```vue
 <script>
 import XLSX from 'xlsx'

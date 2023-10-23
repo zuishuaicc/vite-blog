@@ -1,5 +1,9 @@
+---
+outline: deep
+---
+
+## 去除elementUI中table所有边框
 ```css
-// 去除elementUI中table所有边框
 /deep/.el-table {
 		 border: 0;
 		 th,
