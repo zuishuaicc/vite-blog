@@ -5,6 +5,7 @@ export default defineConfig({
   title: "日常博客",
   description: "write daily note",
   base: '/vite-blog/',
+  
   head: [
     // 添加图标
     ['link', { rel: 'icon', href: './future.png' }]
@@ -13,16 +14,20 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Home', link: '/' },
-      { text: '文档内容', link: '/markdown-examples' },
+      { text: '使用样例', link: '/markdown-examples' },
       {text:'常用算法',link:'/algorithms'}
     ],
-
     sidebar: [
       {
-        text: '文档内容',
+        text: '使用样例',
         items: [
           { text: 'Markdown Examples', link: '/markdown-examples' },
           { text: 'Runtime API Examples', link: '/api-examples' },
+        ]
+      },
+      {
+        text: '文档内容',
+        items: [
           {text:'常用算法',link:'/algorithms'},
           {text:'样式合集',link:'/styleCollection'},
           {text:'vite.config配置',link:'/viteConfig'},
@@ -47,7 +52,35 @@ export default defineConfig({
         ]
       }
     ],
-
+    search: {
+      provider: 'algolia',
+      options: {
+        appId: 'XVMUZ4Z9UJ',
+        apiKey: 'f1dc8ba702a233b6fdcdb36820fcbd93',
+        indexName: 'zuishuaicc-gitee'
+      }
+      // provider: 'local',
+      // options: {
+      //   locales: {
+      //     zh: {
+      //       translations: {
+      //         button: {
+      //           buttonText: '搜索文档',
+      //           buttonAriaLabel: '搜索文档'
+      //         },
+      //         modal: {
+      //           noResultsText: '无法找到相关结果',
+      //           resetButtonTitle: '清除查询条件',
+      //           footer: {
+      //             selectText: '选择',
+      //             navigateText: '切换'
+      //           }
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
+    },
     socialLinks: [
       { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
     ]

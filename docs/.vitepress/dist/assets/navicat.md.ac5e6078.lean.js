@@ -1,0 +1,1 @@
+import{_ as a,o as s,c as e,Q as p}from"./chunks/framework.dd5373ef.js";const E=JSON.parse('{"title":"","description":"","frontmatter":{"outline":"deep"},"headers":[],"relativePath":"navicat.md","filePath":"navicat.md"}'),n={name:"navicat.md"},o=p("",17),c=[o];function l(t,r,d,i,u,y){return s(),e("div",null,c)}const h=a(n,[["render",l]]);export{E as __pageData,h as default};
