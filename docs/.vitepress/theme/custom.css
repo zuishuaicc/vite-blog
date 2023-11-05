@@ -1,0 +1,11 @@
+/* .vitepress/theme/custom.css */
+:root {
+  --vp-c-brand-1: #10b981;
+  --vp-c-brand-2: #34d399;
+  --vp-c-brand-3: #10b981;
+  /* --vp-font-family-base: FangSong_GB2312
+  --vp-font-family-mono: STKaiti */
+}
+/* .vp-doc a {
+  text-decoration: none;
+} */

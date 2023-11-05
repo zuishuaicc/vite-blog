@@ -1,1 +1,0 @@
-import{_ as s,o as a,c as e,Q as p}from"./chunks/framework.dd5373ef.js";const u=JSON.parse('{"title":"","description":"","frontmatter":{"outline":"deep"},"headers":[],"relativePath":"mac.md","filePath":"mac.md"}'),n={name:"mac.md"},l=p("",4),o=[l];function t(c,r,i,d,h,y){return a(),e("div",null,o)}const m=s(n,[["render",t]]);export{u as __pageData,m as default};

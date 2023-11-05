@@ -15,7 +15,7 @@ hero:
     #   link: /api-examples
     - theme: brand
       text: Get Started
-      link: /algorithms.md
+      link: /views/front/algorithms.md
 
 features:
   - title: Feature A

@@ -3,7 +3,7 @@ import {sidebar} from './slidebar'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: "日常博客",
+  title: "zuishauicc的学习历程",
   description: "write daily note",
   base: '/vite-blog/',
   
@@ -14,7 +14,7 @@ export default defineConfig({
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
-      { text: 'Home', link: '/' },
+      { text: '主页', link: '/' },
       { text: '使用样例', link: '/markdown-examples' },
       {text:'常用算法',link:'/algorithms'}
     ],
