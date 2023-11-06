@@ -53,6 +53,7 @@ npm install xxxx --legacy-peer-deps
 - 整个设计理念就是将自建用户与第三方在存储上区分，这在架构演进上也是合乎情理的，开始用户体系大多自建，而后才是对外接入。
 ## vitepress中文官网
 https://vitejs.cn/vitepress/
+https://vitepress.qzxdp.cn/guide/what-is-vitepress.html
 
 ## ts定义种少包含一种类型(工具类型)
 ```ts
