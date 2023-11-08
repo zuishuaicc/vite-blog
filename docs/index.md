@@ -23,17 +23,17 @@ hero:
 features:
   - title:  mac使用
     icon:
-      src: /assets/images/home/icon_mac.svg
+      src: /home/icon_mac.svg
     details: 让你对你的mac更加了解
     link: /views/techStack/mac
   - title: docker使用
     icon:
-      src: /assets/images/home/icon_docker.svg 
+      src: /home/icon_docker.svg 
     details: 打造一致的运行环境，Docker让部署应用变得轻松无比。
     link: /views/techStack/docker
   - title: linux使用
     icon:
-      src: /assets/images/home/icon_linux.svg
+      src: /home/icon_linux.svg
     details: 一种自由和开放源代码的类 Unix 操作系统，广泛应用于各种计算机硬件平台。
     link: /views/techStack/linux
 ---
