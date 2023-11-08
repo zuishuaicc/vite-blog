@@ -7,8 +7,8 @@ hero:
   text: "记录心路历程"
   tagline: do everything you love to do
   image:
-    src: /future.png
-    alt: VitePress
+    src: /logo.png
+    alt: future
   actions:
     # - theme: brand
     #   text: Markdown Examples

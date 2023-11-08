@@ -10,7 +10,7 @@ outline: deep
 
 ## 处理npm包依赖冲突
 
-```
+``` bash
 npm install xxxx --legacy-peer-deps
 ```
 

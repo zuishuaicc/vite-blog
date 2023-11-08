@@ -17,8 +17,13 @@ export default defineConfig({
       { text: '主页', link: '/' },
       { text: '使用样例', link: '/markdown-examples' },
       { text: '常用算法', link: '/views/frontend/algorithms' },
-      { text: '全栈工具', link: 'https://tools.qzxdp.cn/' },
-      { text: '全栈教程', link: 'https://tut.qzxdp.cn/typescript/' },
+      {
+        text: '其他博客',
+        items: [
+          { text: '全栈工具', link: 'https://tools.qzxdp.cn/' },
+          { text: '全栈教程', link: 'https://tut.qzxdp.cn/typescript/' },
+        ]
+      },
     ],
     sidebar: sidebar,
     search: {

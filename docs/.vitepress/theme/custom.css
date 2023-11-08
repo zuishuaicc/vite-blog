@@ -32,9 +32,12 @@
   --vp-c-brand-dark: #10b981;
   /* 代码块背景色 */
   --vp-code-block-bg: #161617;
+  /* 代码块语法类型颜色 */
+  --vp-code-lang-color: #ccc;
   /* 代码块行号颜色 */
-  --vp-code-line-number-color:#CCCCCC
-  /* .vp-doc a {
-  text-decoration: none;
-  } */
+  --vp-code-line-number-color:#ccc;
+  /* 文档 a链接下划线 */
+  .vp-doc a {
+    text-decoration: none;
+  }
 }
