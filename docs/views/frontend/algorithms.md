@@ -28,10 +28,10 @@ const replaceKey = (list) => {
 ```
 ## 扁平化树状数据源
 ```js
-const flatten = (list = []) => {
+const flatten = (list = [],childrenField='children') => {
   let newList = []
   list.forEach(item => {
-    const {children,...rest} = item
+    const {[childrenField]:children,...rest} = item
     newList.push(rest)
     if(children&&children.length){
      newList=[...newList,...flatten(children)] 
@@ -69,7 +69,7 @@ async download (record) {
     },
 ```
 
-## 文件流转blob
+## 二进制流转blob
 
 ```js
 const blob=new Blob([res],{type:'application/vnd.ms-excel'})//xlxs

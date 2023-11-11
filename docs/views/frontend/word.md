@@ -1,7 +1,7 @@
 ---
 outline: deep
 ---
-## 前端导出word
+## 前端导出word（docx格式）
 ### 安装依赖
 ```bash
 -- 安装 docxtemplater
@@ -181,3 +181,114 @@ const exportWord = () => {
 ### 也可使用docx-templates
 docx-templates既可以用在browers也可以用在nodejs中  
 参考博客 https://juejin.cn/post/7170695319004315679
+## 前端预览docx
+### vue2/vue3框架预览
+安装依赖
+```bash
+#docx文档预览组件
+npm install @vue-office/docx vue-demi
+
+#excel文档预览组件
+npm install @vue-office/excel vue-demi
+
+#pdf文档预览组件
+npm install @vue-office/pdf vue-demi
+```
+如果是vue2.6版本或以下还需要额外安装 @vue/composition-api
+```bash
+npm install @vue/composition-api
+```
+使用
+```vue
+<template>
+    <div id="docx-demo">
+        <el-upload
+            :limit="1"
+            :file-list="fileList"
+            accept=".docx"
+            :beforeUpload="beforeUpload"
+            action=""
+        >
+            <el-button size="small" type="warning">点击上传</el-button>
+        </el-upload>
+        <vue-office-docx :src="src"/>
+    </div>
+</template>
+
+<script>
+import VueOfficeDocx from '@vue-office/docx'
+import '@vue-office/docx/lib/index.css'
+
+export default {
+    components: {
+        VueOfficeDocx
+    },
+    data() {
+        return {
+            src: '',
+            fileList: []
+        }
+    },
+    methods: {
+        //在beforeUpload中读取文件内容
+        beforeUpload(file) {
+            let reader = new FileReader();
+            reader.readAsArrayBuffer(file);
+            reader.onload = (loadEvent) => {
+                let arrayBuffer = loadEvent.target.result;
+                this.src = arrayBuffer
+            };
+            return false
+        }
+    }
+}
+</script>
+```
+### 非Vue框架文件预览
+#### 使用docx-preview
+安装依赖
+```bash
+npm i docx-preview
+```
+使用
+```html
+<script src="https://unpkg.com/promise-polyfill/dist/polyfill.min.js"></script>
+<!--lib uses jszip-->
+<script src="https://unpkg.com/jszip/dist/jszip.min.js"></script>
+<script src="docx-preview.min.js"></script>
+<script>
+    var docData = <document Blob>;
+
+    docx.renderAsync(docData, document.getElementById("container"))
+        .then(x => console.log("docx: finished"));
+</script>
+<body>
+    ...
+    <div id="container"></div>
+    ...
+</body>
+```
+#### 使用@js-preview/docx
+安装依赖
+```bash
+npm i @js-preview/docx
+```
+使用
+```ts
+import jsPreviewDocx from "@js-preview/docx";
+import '@js-preview/docx/lib/index.css'
+
+//初始化时指明要挂载的父元素Dom节点
+const myDocxPreviewer = jsPreviewDocx.init(document.getElementById('docx'));
+
+//传递要预览的文件地址即可
+myDocxPreviewer.preview('https://501351981.github.io/vue-office/examples/dist/static/test-files/test.docx').then(res=>{
+    console.log('预览完成');
+}).catch(e=>{
+    console.log('预览失败', e);
+})
+```
+参考文档地址  
+https://501351981.github.io/vue-office/examples/docs/guide/js-preview.html  
+word预览演示demo  
+https://501351981.github.io/vue-office/examples/dist/#/docx

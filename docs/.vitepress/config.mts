@@ -90,7 +90,7 @@ export default defineConfig({
     ],
     footer: {
       message: '努力成为全干型人才',
-      copyright: '@copyright 2023',
+      copyright: 'Copyright © 2023-present zuishuaicc',
     }
   },
   markdown: {

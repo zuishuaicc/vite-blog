@@ -41,6 +41,7 @@ export const sidebar = [
         items: [
           {text:fruites[16]+' node中操作word',link:'/views/backend/node-word'},
           {text:fruites[17]+' 三方登录表结构',link:'/views/backend/third-table'},
+          {text:fruites[18]+' node中使用子进程',link:'/views/backend/node-child_process'},
         ]
       }
     ]
