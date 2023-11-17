@@ -277,7 +277,7 @@ export function export_json_to_excel({
 }
 
 ```
-## 在vue中使用导出excel
+## 在vue中导出excel
 ```vue
 
 <script>
@@ -344,7 +344,7 @@ method:{
 </script>
 
 ```
-## 在vue中使用导入excel
+## 在vue中导入excel
 ```vue
 <script>
 import XLSX from 'xlsx'

@@ -23,12 +23,13 @@ export const sidebar = [
           {text:fruites[7]+' js页面拖拽',link:'/views/frontend/drag'},
           {text:fruites[8]+' clickoutside指令',link:'/views/frontend/clickoutside'},
           {text:fruites[9]+' indexDB使用',link:'/views/frontend/indexDB'},
-          {text:fruites[10]+' word操作',link:'/views/frontend/word'},
-          {text:fruites[11]+' excel前端导出',link:'/views/frontend/excel'},
+          {text:fruites[10]+' word前端操作',link:'/views/frontend/word'},
+          {text:fruites[11]+' excel前端操作',link:'/views/frontend/excel'},
           {text:fruites[12]+' ant-design-vue可变列宽表格',link:'/views/frontend/vue-drag'},
           {text:fruites[13]+' 文件分片上传',link:'/views/frontend/file-slice'},
           {text:fruites[14]+' vue-to-pdf使用',link:'/views/frontend/vue-to-pdf'},
           {text:fruites[15]+' 微信小程序中使用formdata',link:'/views/frontend/wx-formdata'},
+          {text:fruites[26]+' 人脸识别',link:'/views/frontend/face-api'},
         ]
       }
     ]
