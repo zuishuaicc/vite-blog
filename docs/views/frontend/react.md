@@ -145,7 +145,7 @@ yarn add lint-staged -D
 yarn add @commitlint/cli @commitlint/config-conventional -D
 ```
 然后在根目录创建配置文件 .commitlintrc.cjs
-```cjs
+```js
 module.exports = {
   extends: ["@commitlint/config-conventional"]
 }
