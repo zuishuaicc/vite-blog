@@ -11,3 +11,7 @@ chmod +x <脚本路径>
 xattr -r -d com.apple.quarantine +目录路径
 ```
 
+## 删除目录下.DS_Store文件
+```bash
+find . -name ".DS_Store" -delete
+```
