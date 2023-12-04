@@ -30,7 +30,13 @@ export const sidebar = [
           {text:fruites[14]+' vue-to-pdf使用',link:'/views/frontend/vue-to-pdf'},
           {text:fruites[15]+' 微信小程序中使用formdata',link:'/views/frontend/wx-formdata'},
           {text:fruites[26]+' 人脸识别',link:'/views/frontend/face-api'},
-          {text:fruites[30]+' vite搭建React+ts',link:'/views/frontend/react'},
+          {
+            text:'React',
+            items: [
+              {text:fruites[30] + ' vite搭建React+ts',link: '/views/frontend/react/react-quick-start'},
+              {text: fruites[31] + ' react实战问题', link: '/views/frontend/react/react-practice' },
+            ]
+          },
         ]
       }
     ]

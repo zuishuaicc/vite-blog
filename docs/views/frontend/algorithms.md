@@ -385,3 +385,14 @@ export const download = (urlArr, filename = '打包下载') => {
   })
 }
 ```
+## 动态解构赋值
+需要使用:号来重命名变量
+```ts
+const children = 'childrenList'
+
+  const {[children]:child,...rest}=item
+  console.log(child)
+
+  const {channelArticles: { [channelId]: channelArticle }} = useAppSelector((state) => state.homeSlice)
+  console.log(channelArticle)
+```

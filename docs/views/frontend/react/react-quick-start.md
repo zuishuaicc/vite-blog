@@ -17,8 +17,9 @@ npm run dev
 ```bash
 npm init @eslint/config
 ```
-选择eslint配置
-![图片](../../assets/images/react/eslint.webp)
+选择eslint配置  
+![图片](../../../assets/images/react/eslint.webp)
+
 按需选择完配置后，选择立即安装，就可一键安装相关依赖。安装成功后 ESLint 帮我们创建了 .eslintrc.cjs 配置文件（cjs 是指 CommonJS 格式）。
 ## 安装Prettier
 ```bash
@@ -87,7 +88,7 @@ Error [ERR_REQUIRE_ESM]: require() of ES Module /Users/Code/2022/leetcode-vj-fe/
 ```
 这个是 .prettierrc.js 中使用 CommonJS 语法报错，把 .prettierrc.js 也改名为 .prettierrc.cjs 就好了。  
 再试下发现还是有错误，如下
-![图片](../../assets/images/react/lint-error.png)
+![图片](../../../assets/images/react/lint-error.png)
 错误看起来也比较明显，就是我们没有引入 React，在 React17 中，我们已经不需要为 JSX 显示引入 React 了，按照提示更改下 .eslintrc.cjs。
 ```js
 module.exports = {

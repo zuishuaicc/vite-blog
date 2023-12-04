@@ -1,7 +1,7 @@
 ---
 outline: deep
 ---
-
+# chrome插件配置文件
 ```json
 {
   //chrome插件的版本
