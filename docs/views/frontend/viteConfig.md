@@ -200,3 +200,88 @@ export default () => defineConfig({
 })
 ```
 
+## vite配置cdn
+### 使用rollup-plugin-external-globals插件包
+Vite 的打包是通过 Rollup，打包时使用 CDN 需要安装一个插件：rollup-plugin-external-globals
+
+```ts
+import { defineConfig } from 'vite'
+import externalGlobals from 'rollup-plugin-external-globals'
+
+export default defineConfig({
+  // other config
+  build: {
+    rollupOptions: {
+      external: ['vue', 'vuex', 'axios', 'vue-router'],
+      plugins: [
+        externalGlobals({
+          vue: 'Vue',
+          vuex: 'Vuex',
+          axios: 'axios',
+          'vue-router': 'VueRouter'
+        })
+      ]
+    }
+  }
+})
+```
+external 是 CDN 的包名
+
+externalGlobals 里的键值对与 webpack externals 的解释一致
+
+然后在 index.html 加入 CDN 文件
+
+```html
+<script src='https://cdn/vue····'></script>
+<script src='https://cdn/vuex····'></script>
+<script src='https://cdn/axios····'></script>
+<script src='https://cdn/vue-routers····'></script>
+```
+### 使用vite-plugin-cdn-import插件包
+
+```ts
+import importToCDN from 'vite-plugin-cdn-import';
+importToCDN({
+    modules: [
+        {
+            name: 'vue',//被引入的安装包名字
+            var: 'Vue',//全局变量名字
+            path: 'https://cdn.jsdelivr.net/npm/vue@3.2.25/dist/vue.global.prod.js'//cdn地址
+        },
+        {
+            name: 'vue-i18n',
+            var: 'VueI18n',
+            path: 'https://cdn.bootcdn.net/ajax/libs/vue-i18n/9.1.10/vue-i18n.global.prod.min.js'
+        },
+        {
+            name: 'vue-router',
+            var: 'VueRouter',
+            path: 'https://unpkg.com/vue-router@4.0.16/dist/vue-router.global.prod.js'
+        },
+
+        {
+            name: 'element-plus',
+            var: 'ElementPlus',
+            path: `https://unpkg.com/element-plus@2.2.6/dist/index.full.js`,
+            css: 'https://unpkg.com/element-plus/dist/index.css'
+        },
+        {
+            name: 'vue-demi',
+            var: 'VueDemi',
+            path: 'https://cdn.bootcdn.net/ajax/libs/vue-demi/0.13.1/index.iife.js'
+        },
+        {
+            name: 'pinia',
+            var: 'Pinia',
+            path: 'https://cdn.bootcdn.net/ajax/libs/pinia/2.0.14/pinia.iife.prod.min.js'
+        },
+        {
+            name: '@smallwei/avue',
+            var: 'AVUE',
+            path: 'https://cdn.jsdelivr.net/npm/@smallwei/avue@3.0.17'
+        }
+    ]
+}),
+```
+这上面的都有引用关系所以都需要通过cdn的方式引入
+VueDemi这个是pinia用来判断是vue2还是vue3所需要的，要额外引入一下
