@@ -396,3 +396,21 @@ const children = 'childrenList'
   const {channelArticles: { [channelId]: channelArticle }} = useAppSelector((state) => state.homeSlice)
   console.log(channelArticle)
 ```
+## 防抖函数
+```ts
+/**
+ * 函数防抖
+ * @param fn 执行函数
+ * @param delay 执行延迟
+ * @returns 带防抖功能的函数
+ */
+function debounce(this: any, fn: Function, delay: number) {
+  let timer: number
+  return (...args: any[]) => {
+    timer && window.clearTimeout(timer)
+    timer = window.setTimeout(() => {
+      fn.apply(this, args)
+    }, delay)
+  }
+}
+```

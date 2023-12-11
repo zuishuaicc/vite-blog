@@ -37,6 +37,12 @@ export const sidebar = [
               {text: fruites[31] + ' react实战问题', link: '/views/frontend/react/react-practice' },
             ]
           },
+          {
+            text:'Vue',
+            items: [
+              {text: fruites[32] + ' vue源码解析', link: '/views/frontend/vue/vue-sourcecode' },
+            ]
+          },
         ]
       }
     ]
@@ -68,6 +74,7 @@ export const sidebar = [
           {text:fruites[21]+' bat命令',link:'/views/techStack/bat'},
           {text:fruites[22]+' linux使用',link:'/views/techStack/linux'},
           {text:fruites[23]+' nginx使用',link:'/views/techStack/nginx'},
+          {text:fruites[33]+' 位运算',link:'/views/techStack/bit-operate'},
           {text:fruites[24]+' 日常杂记',link:'/views/techStack/dailyNote'},
           {text:fruites[25]+' methodPlug',link:'/views/techStack/method-plug'},
          
