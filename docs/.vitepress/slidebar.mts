@@ -35,6 +35,7 @@ export const sidebar = [
             items: [
               {text:fruites[30] + ' vite搭建React+ts',link: '/views/frontend/react/react-quick-start'},
               {text: fruites[31] + ' react实战问题', link: '/views/frontend/react/react-practice' },
+              {text: fruites[33] + ' react组件复用技巧', link: '/views/frontend/react/react-skill' },
             ]
           },
           {
