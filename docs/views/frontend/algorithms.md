@@ -404,13 +404,14 @@ const children = 'childrenList'
  * @param delay 执行延迟
  * @returns 带防抖功能的函数
  */
-function debounce(this: any, fn: Function, delay: number) {
+export function useDebounce<T = any>(this: any, fn: (e?: T) => void, delay: number): (e?: T) => void {
   let timer: number
-  return (...args: any[]) => {
+  return (...args) => {
     timer && window.clearTimeout(timer)
     timer = window.setTimeout(() => {
       fn.apply(this, args)
     }, delay)
   }
 }
+
 ```

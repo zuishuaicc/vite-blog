@@ -130,3 +130,107 @@ function flushCallbacks() {
 
 
 ```
+## vue3中computed的实现
+1,首先实现computed函数
+```ts
+export const isFunction = (val: unknown): val is Function =>
+  typeof val === 'function'
+
+// 创建计算属性ref
+export function computed<T>(
+  getterOrOptions: ComputedGetter<T> | WritableComputedOptions<T>,
+  debugOptions?: DebuggerOptions
+) {
+  let getter: ComputedGetter<T>
+  let setter: ComputedSetter<T>
+
+  // 是否只有getter
+  const onlyGetter = isFunction(getterOrOptions)
+  if (onlyGetter) {
+    getter = getterOrOptions
+    // 如果只有getter，在开发环境下吧setter换成警告
+    setter = __DEV__
+      ? () => {
+          console.warn('Write operation failed: computed value is readonly')
+        }
+      : NOOP
+  } else {
+    getter = getterOrOptions.get
+    setter = getterOrOptions.set
+  }
+
+  // 传入 getter、setter、是否有setter 创建computed对象
+  const cRef = new ComputedRefImpl(getter, setter, onlyGetter || !setter)
+
+  // 如果是开发环境在effect对象注入传入的收集和触发钩子
+  if (__DEV__ && debugOptions) {
+    cRef.effect.onTrack = debugOptions.onTrack
+    cRef.effect.onTrigger = debugOptions.onTrigger
+  }
+
+  return cRef as any
+}
+
+```
+2，定义ComputedRefImpl实现类
+```ts
+// Computed对象
+class ComputedRefImpl<T> {
+  // 引用了当前computed的effect的Set
+  public dep?: Dep = undefined
+
+  // 放置缓存值
+  private _value!: T
+  // 当前值是否是脏数据，（当前值需要更新）
+  private _dirty = true
+  // 放置effect对象
+  public readonly effect: ReactiveEffect<T>
+
+  // ref标识
+  public readonly __v_isRef = true
+  // isReadonly标识
+  public readonly [ReactiveFlags.IS_READONLY]: boolean
+
+  constructor(
+    getter: ComputedGetter<T>,
+    private readonly _setter: ComputedSetter<T>,
+    isReadonly: boolean
+  ) {
+    // 创建effect对象，将当前getter当做监听函数，并附加调度器
+    this.effect = new ReactiveEffect(getter, () => {
+      // 如果当前不是脏数据
+      if (!this._dirty) {
+        // 当前为脏数据
+        this._dirty = true
+        // 触发更改
+        triggerRefValue(this)
+      }
+    })
+
+    // 根据传入是否有setter函数来决定是否只读
+    this[ReactiveFlags.IS_READONLY] = isReadonly
+  }
+
+  get value() {
+    // readonly(computed)，获取时this就是readonly，无法修改属性, 所以要先获取原始对象
+    const self = toRaw(this)
+    // 收集依赖
+    trackRefValue(self)
+    // 如果当前是脏数据（没更新）
+    if (self._dirty) {
+      // 更改为不是脏数据
+      self._dirty = false
+      // 执行收集函数，更新缓存
+      self._value = self.effect.run()!
+    }
+    // 如果不是脏数据则直接获取缓存值
+    return self._value
+  }
+
+  set value(newValue: T) {
+    this._setter(newValue)
+  }
+}
+
+
+```

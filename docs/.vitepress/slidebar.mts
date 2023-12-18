@@ -30,6 +30,7 @@ export const sidebar = [
           {text:fruites[14]+' vue-to-pdf使用',link:'/views/frontend/vue-to-pdf'},
           {text:fruites[15]+' 微信小程序中使用formdata',link:'/views/frontend/wx-formdata'},
           {text:fruites[26]+' 人脸识别',link:'/views/frontend/face-api'},
+          {text:fruites[34]+' 原生webcomponent',link:'/views/frontend/webcomponent.md'},
           {
             text:'React',
             items: [
@@ -59,6 +60,17 @@ export const sidebar = [
           {text:fruites[27]+' node中使用子进程',link:'/views/backend/node-child_process'},
           {text:fruites[28]+' node爬虫',link:'/views/backend/node-crawl'},
           {text:fruites[29]+' Midway',link:'/views/backend/midway'},
+        ]
+      }
+    ]
+  },
+  {
+    items: [
+      {
+        text: '客户端',
+        collapsed: true,
+        items: [
+          {text:fruites[34]+' Election',link:'/views/application/electron'},
         ]
       }
     ]
