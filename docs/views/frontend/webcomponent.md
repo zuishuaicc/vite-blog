@@ -190,7 +190,7 @@ EMP是欢聚时代基于 Webpack5 Module Federation 搭建的微前端方案，�
 :::info
 体验非常好，完全的spa切换体验，非常丝滑
 :::
-#### 其他框架
+#### 其他微前端框架
 - ice-lab/icestark 飞冰的微前端方案
 - teambit/bit 无中文文档，国外挺火
 

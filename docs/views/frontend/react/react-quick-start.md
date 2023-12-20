@@ -39,7 +39,7 @@ module.exports = {
 ```
 ## ESLint + Prettier
 ```bash
-yarn add eslint-config-prettier eslint-plugin-prettier -D
+npm install eslint-config-prettier eslint-plugin-prettier -D
 ```
 现在更改 Eslint 的配置文件 .eslintrc.cjs 在里面加入 Prettier 相关配置。具体含义可见 https://github.com/prettier/eslint-plugin-prettier#recommended-configuration
 ```diff
@@ -82,7 +82,7 @@ module.exports = {
     }
 }
 ```
-尝试运行一下 yarn lint 但是发现报错了。
+尝试运行一下 npm run  lint 但是发现报错了。
 ```bash
 Error [ERR_REQUIRE_ESM]: require() of ES Module /Users/Code/2022/leetcode-vj-fe/.prettierrc.js from /Users/Code/2022/leetcode-vj-fe/node_modules/prettier/third-party.js not supported.
 ```
@@ -127,7 +127,7 @@ npx husky add .husky/pre-commit "npm run lint"
 ### lint-staged
 首先安装依赖
 ```bash
-yarn add lint-staged -D
+npm install lint-staged -D
 ```
 然后在 package.json 添加相关配置。
 ```json
