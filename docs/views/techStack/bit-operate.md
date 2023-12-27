@@ -87,3 +87,40 @@ p = p | perm.write ^ perm.write
 p & perm.read ===perm.read?console.log('可读'):console.log('不可读')
 
 ```
+##  变量交换
+### 使用中间变量交换
+```ts
+let a = 5
+let b = 6
+const temp = b
+b = a
+a = temp
+```
+### 使用ES6结构赋值
+```ts
+let a = 5
+let b = 6
+[ a , b ] = [ b , a]
+```
+### 使用算数运算（a，b都必须为数字）
+```ts
+let a = 5
+let b = 6
+a = a + b
+b = a - b
+a = a - b
+```
+可简化为
+```ts
+let a = 5
+let b = 6
+a = b + ( b = a) - b
+```
+### 使用位运算的异或运算（a，b都必须为整数）
+```ts
+let a = 5
+let b = 6
+a = a ^ b
+b = a ^ b
+a = a ^ b
+```
