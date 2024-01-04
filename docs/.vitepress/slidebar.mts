@@ -31,6 +31,7 @@ export const sidebar = [
           {text:fruites[15]+' 微信小程序中使用formdata',link:'/views/frontend/wx-formdata'},
           {text:fruites[26]+' 人脸识别',link:'/views/frontend/face-api'},
           {text:fruites[34]+' 原生webcomponent',link:'/views/frontend/webcomponent.md'},
+          {text:fruites[35]+' 消除异步传染性',link:'/views/frontend/async-infect.md'},
           {
             text:'React',
             items: [
