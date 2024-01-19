@@ -1,4 +1,15 @@
-const fruites=['🥨' ,'🥯' ,'🥞' ,'🧇' ,'🥓' ,'🍟' ,'🍕' ,'🌭' ,'🥪' ,'🌮' ,'🌯' ,'🥙' ,'🍎' ,'🍌' ,'🍇' ,'🍊','🍓','🍍','🍑','🍒','🍉','🍋','🥝','🍈','🥭','🍐','🍅','🍆', '🥑','🍿', '🧈','🧂','🥫',	'🍱','🍘','🍙','🍚','🍛','🍜','🧆','🥚','🍳','🥘','🍠','🌶️','🧄','🧅','🍄','🥜','🌰','🍞','🥐','🥖','🥥','🥦','🌽','🥕']
+// 定义图标
+let fruites = ['🥨', '🥯', '🥞', '🧇', '🥓', '🍟', '🍕', '🌭', '🥪', '🌮', '🌯', '🥙', '🍎', '🍌', '🍇', '🍊', '🍓', '🍍', '🍑', '🍒', '🍉', '🍋', '🥝', '🍈', '🥭', '🍐', '🍅', '🍆', '🥑', '🍿', '🧈', '🧂', '🥫', '🍱', '🍘', '🍙', '🍚', '🍛', '🍜', '🧆', '🥚', '🍳', '🥘', '🍠', '🌶️', '🧄', '🧅', '🍄', '🥜', '🌰', '🍞', '🥐', '🥖', '🥥', '🥦', '🌽', '🥕']
+
+// 依次获取图标
+const copyFruites = JSON.parse(JSON.stringify(fruites))
+function getIcon() {
+  if (!fruites.length) {
+    fruites=JSON.parse(JSON.stringify(copyFruites))
+  } 
+  const icon = fruites.shift()
+  return icon
+}
 export const sidebar = [
   {
     text: '使用样例',
@@ -13,37 +24,37 @@ export const sidebar = [
         text: '前端',
         collapsed: true,
         items: [
-          {text:fruites[0]+' 常用算法',link:'/views/frontend/algorithms'},
-          {text:fruites[1]+' 样式合集',link:'/views/frontend/styleCollection'},
-          {text:fruites[2]+' css画悬浮球',link:'/views/frontend/css-ball'},
-          {text:fruites[3]+' vite.config配置',link:'/views/frontend/viteConfig'},
-          {text:fruites[4]+' electron-builder配置',link:'/views/frontend/electron-builder'},
-          {text:fruites[5]+' chrome-extension',link:'/views/frontend/chrome-extension'},
-          {text:fruites[6]+' canvas使用',link:'/views/frontend/canvas'},
-          {text:fruites[7]+' js页面拖拽',link:'/views/frontend/drag'},
-          {text:fruites[8]+' clickoutside指令',link:'/views/frontend/clickoutside'},
-          {text:fruites[9]+' indexDB使用',link:'/views/frontend/indexDB'},
-          {text:fruites[10]+' word前端操作',link:'/views/frontend/word'},
-          {text:fruites[11]+' excel前端操作',link:'/views/frontend/excel'},
-          {text:fruites[12]+' ant-design-vue可变列宽表格',link:'/views/frontend/vue-drag'},
-          {text:fruites[13]+' 文件分片上传',link:'/views/frontend/file-slice'},
-          {text:fruites[14]+' vue-to-pdf使用',link:'/views/frontend/vue-to-pdf'},
-          {text:fruites[15]+' 微信小程序中使用formdata',link:'/views/frontend/wx-formdata'},
-          {text:fruites[26]+' 人脸识别',link:'/views/frontend/face-api'},
-          {text:fruites[34]+' 原生webcomponent',link:'/views/frontend/webcomponent.md'},
-          {text:fruites[35]+' 消除异步传染性',link:'/views/frontend/async-infect.md'},
+          {text:getIcon()+' 常用算法',link:'/views/frontend/algorithms'},
+          {text:getIcon()+' 样式合集',link:'/views/frontend/styleCollection'},
+          {text:getIcon()+' css画悬浮球',link:'/views/frontend/css-ball'},
+          {text:getIcon()+' vite.config配置',link:'/views/frontend/viteConfig'},
+          {text:getIcon()+' electron-builder配置',link:'/views/frontend/electron-builder'},
+          {text:getIcon()+' chrome-extension',link:'/views/frontend/chrome-extension'},
+          {text:getIcon()+' canvas使用',link:'/views/frontend/canvas'},
+          {text:getIcon()+' js页面拖拽',link:'/views/frontend/drag'},
+          {text:getIcon()+' clickoutside指令',link:'/views/frontend/clickoutside'},
+          {text:getIcon()+' indexDB使用',link:'/views/frontend/indexDB'},
+          {text:getIcon()+' word前端操作',link:'/views/frontend/word'},
+          {text:getIcon()+' excel前端操作',link:'/views/frontend/excel'},
+          {text:getIcon()+' ant-design-vue可变列宽表格',link:'/views/frontend/vue-drag'},
+          {text:getIcon()+' 文件分片上传',link:'/views/frontend/file-slice'},
+          {text:getIcon()+' vue-to-pdf使用',link:'/views/frontend/vue-to-pdf'},
+          {text:getIcon()+' 微信小程序中使用formdata',link:'/views/frontend/wx-formdata'},
+          {text:getIcon()+' 人脸识别',link:'/views/frontend/face-api'},
+          {text:getIcon()+' 原生webcomponent',link:'/views/frontend/webcomponent.md'},
+          {text:getIcon()+' 消除异步传染性',link:'/views/frontend/async-infect.md'},
           {
             text:'React',
             items: [
-              {text:fruites[30] + ' vite搭建React+ts',link: '/views/frontend/react/react-quick-start'},
-              {text: fruites[31] + ' react实战问题', link: '/views/frontend/react/react-practice' },
-              {text: fruites[33] + ' react组件复用技巧', link: '/views/frontend/react/react-skill' },
+              {text:getIcon()+' vite搭建React+ts',link: '/views/frontend/react/react-quick-start'},
+              {text:getIcon()+' react实战问题', link: '/views/frontend/react/react-practice' },
+              {text:getIcon()+' react组件复用技巧', link: '/views/frontend/react/react-skill' },
             ]
           },
           {
             text:'Vue',
             items: [
-              {text: fruites[32] + ' vue源码解析', link: '/views/frontend/vue/vue-sourcecode' },
+              {text:getIcon()+' vue源码解析', link: '/views/frontend/vue/vue-sourcecode' },
             ]
           },
         ]
@@ -56,11 +67,12 @@ export const sidebar = [
         text: '服务端',
         collapsed: true,
         items: [
-          {text:fruites[16]+' node中操作word',link:'/views/backend/node-word'},
-          {text:fruites[17]+' 三方登录表结构',link:'/views/backend/third-table'},
-          {text:fruites[27]+' node中使用子进程',link:'/views/backend/node-child_process'},
-          {text:fruites[28]+' node爬虫',link:'/views/backend/node-crawl'},
-          {text:fruites[29]+' Midway',link:'/views/backend/midway'},
+          {text:getIcon()+' node中操作word',link:'/views/backend/node-word'},
+          {text:getIcon()+' 三方登录表结构',link:'/views/backend/third-table'},
+          {text:getIcon()+' node中使用子进程',link:'/views/backend/node-child_process'},
+          {text:getIcon()+' node爬虫',link:'/views/backend/node-crawl'},
+          {text:getIcon()+' Midway',link:'/views/backend/midway'},
+          {text:getIcon()+' 任务队列',link:'/views/backend/task-manager'},
         ]
       }
     ]
@@ -71,7 +83,9 @@ export const sidebar = [
         text: '客户端',
         collapsed: true,
         items: [
-          {text:fruites[34]+' Election',link:'/views/application/electron'},
+          {text:getIcon()+' Election',link:'/views/application/electron'},
+          {text:getIcon()+' VScodeExtension', link: '/views/application/your-first-extension' },
+          {text:getIcon()+' VScode调试应用',link:'/views/application/vscode-debug'},
         ]
       }
     ]
@@ -82,16 +96,15 @@ export const sidebar = [
         text: '技术栈',
         collapsed: true,
         items: [
-          {text:fruites[18]+' mac使用',link:'/views/techStack/mac'},
-          {text:fruites[19]+' navicat使用（mac版本）', link:'/views/techStack/navicat' },
-          {text:fruites[20]+' docker使用',link:'/views/techStack/docker'},
-          {text:fruites[21]+' bat命令',link:'/views/techStack/bat'},
-          {text:fruites[22]+' linux使用',link:'/views/techStack/linux'},
-          {text:fruites[23]+' nginx使用',link:'/views/techStack/nginx'},
-          {text:fruites[33]+' 位运算',link:'/views/techStack/bit-operate'},
-          {text:fruites[24]+' 日常杂记',link:'/views/techStack/dailyNote'},
-          {text:fruites[25]+' methodPlug',link:'/views/techStack/method-plug'},
-         
+          {text:getIcon()+' mac使用',link:'/views/techStack/mac'},
+          {text:getIcon()+' navicat使用（mac版本）', link:'/views/techStack/navicat' },
+          {text:getIcon()+' docker使用',link:'/views/techStack/docker'},
+          {text:getIcon()+' bat命令',link:'/views/techStack/bat'},
+          {text:getIcon()+' linux使用',link:'/views/techStack/linux'},
+          {text:getIcon()+' nginx使用',link:'/views/techStack/nginx'},
+          {text:getIcon()+' 位运算',link:'/views/techStack/bit-operate'},
+          {text:getIcon()+' 日常杂记',link:'/views/techStack/dailyNote'},
+          {text:getIcon()+' methodPlug',link:'/views/techStack/method-plug'},
         ]
       }
     ]

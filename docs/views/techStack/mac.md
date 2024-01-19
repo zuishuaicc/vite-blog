@@ -15,3 +15,8 @@ xattr -r -d com.apple.quarantine +目录路径
 ```bash
 find . -name ".DS_Store" -delete
 ```
+## 禁止生成 .DS_store 文件
+macOS可以通过命令行修改系统配置，让系统不再在文件夹中生成这个配置文件，命令如下：
+```bash
+defaults write com.apple.desktopservices DSDontWriteNetworkStores true
+```

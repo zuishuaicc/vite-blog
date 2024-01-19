@@ -48,7 +48,7 @@ function run(func) {
       cache.value = err
       cache.status = 'rejected'
     })
-    // 抛出错误
+    // 抛出promise错误
     throw promise
   }
   window.axios = newFetch
@@ -57,6 +57,7 @@ function run(func) {
     func()
   } catch (error) {
     if (error instanceof Promise) {
+      // 判断错误类型为promise时，在finally中再次执行func，因为请求已经有结果了，会直接返回缓存结果
       error.finally(() => {
         window.axios = newFetch
         func()
