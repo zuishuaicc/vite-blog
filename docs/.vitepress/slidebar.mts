@@ -103,6 +103,7 @@ export const sidebar = [
           {text:getIcon()+' linux使用',link:'/views/techStack/linux'},
           {text:getIcon()+' nginx使用',link:'/views/techStack/nginx'},
           {text:getIcon()+' 位运算',link:'/views/techStack/bit-operate'},
+          {text:getIcon()+' vim操作',link:'/views/techStack/vim-operate'},
           {text:getIcon()+' 日常杂记',link:'/views/techStack/dailyNote'},
           {text:getIcon()+' methodPlug',link:'/views/techStack/method-plug'},
         ]
