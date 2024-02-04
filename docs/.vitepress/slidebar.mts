@@ -41,8 +41,9 @@ export const sidebar = [
           {text:getIcon()+' vue-to-pdf使用',link:'/views/frontend/vue-to-pdf'},
           {text:getIcon()+' 微信小程序中使用formdata',link:'/views/frontend/wx-formdata'},
           {text:getIcon()+' 人脸识别',link:'/views/frontend/face-api'},
-          {text:getIcon()+' 原生webcomponent',link:'/views/frontend/webcomponent.md'},
-          {text:getIcon()+' 消除异步传染性',link:'/views/frontend/async-infect.md'},
+          {text:getIcon()+' 原生webcomponent',link:'/views/frontend/webcomponent'},
+          {text:getIcon()+' 消除异步传染性',link:'/views/frontend/async-infect'},
+          {text:getIcon()+' tsconfig详细配置',link:'/views/frontend/tsconfig-detail'},
           {
             text:'React',
             items: [
