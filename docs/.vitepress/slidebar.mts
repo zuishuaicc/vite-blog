@@ -69,6 +69,7 @@ export const sidebar = [
           { text: getIcon() + " 三方登录表结构", link: "/views/backend/third-table" },
           { text: getIcon() + " node中使用子进程", link: "/views/backend/node-child_process" },
           { text: getIcon() + " node爬虫", link: "/views/backend/node-crawl" },
+          { text: getIcon() + " node+tensorflow", link: "/views/backend/node-tensorflow" },
           { text: getIcon() + " Midway", link: "/views/backend/midway" },
           { text: getIcon() + " 任务队列", link: "/views/backend/task-manager" },
         ],
