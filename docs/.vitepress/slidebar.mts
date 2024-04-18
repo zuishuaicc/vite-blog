@@ -88,7 +88,10 @@ export const sidebar = [
           { text: getIcon() + " VScode调试应用", link: "/views/application/vscode-debug" },
           {
             text: "Rust",
-            items: [{ text: getIcon() + " Rust基础", link: "/views/application/rust/rust-base" }],
+            items: [
+              { text: getIcon() + " Rust基础", link: "/views/application/rust/rust-base" },
+              { text: getIcon() + " Rust动态链接库", link: "/views/application/rust/rust-lib" },
+            ],
           },
         ],
       },
