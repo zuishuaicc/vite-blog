@@ -20,7 +20,7 @@ cargo new rslib --lib
 ```
 
 目录结构
-![alt text](image.png)
+![alt text](../../../assets/images/rust-lib/image.png)
 
 ### 2. 修改`Cargo.toml`文件内容
 
@@ -115,7 +115,7 @@ npm install ffi-rs
 ### 3.放入动态链接库文件
 
 将前面生成的 ib\*\*.`[dll/os/dylib]`文件复制过来，放到根目录下
-![alt text](image-1.png)
+![alt text](../../../assets/images/rust-lib/image-1.png)
 
 ### 4.使用 ffi-rs 调用动态连接库
 
@@ -148,3 +148,15 @@ close("rslib")
 ```
 
 `r`即为调用动态链接库的计算结果，`equal`为校验结果 r 与 a+b 是否相同的方法
+
+### 5.官方示例地址
+
+https://github.com/alexcrichton/rust-ffi-examples/blob/master/node-to-rust/src/lib.rs
+
+# 使用 napi-rs 开发 Rust 动态链接库
+
+文档地址https://github.com/napi-rs/napi-rs
+
+# 使用 napi-rs 开发的 node-rs 项目下完成的.node 插件包
+
+https://github.com/napi-rs/node-rs
