@@ -68,8 +68,8 @@ cargo build
 ```
 
 编译完成后，最终动态连接库文件路径：  
-target 模式：target/debug/lib**.`[dll/os/dylib]`  
-release 模式：release/lib**.`[dll/os/dylib]`  
+debug 模式：target/debug/lib**.`[dll/os/dylib]`  
+release 模式：target/release/lib**.`[dll/os/dylib]`  
 **注：windows 中后缀为 dll,linux 中后缀为 os,macos 后缀为 dylib**，\*\*为创建动态链接库是定义的名字
 
 ## 二. 编写 node 工程调用
