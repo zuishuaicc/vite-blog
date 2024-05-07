@@ -3,7 +3,6 @@ import { sidebar } from "./slidebar.mts"
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  // outDir: "../dist",
   title: "cc的学习历程",
   description: "write daily note",
   base: "/vite-blog/",
