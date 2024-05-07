@@ -292,3 +292,26 @@ VueDemi 这个是 pinia 用来判断是 vue2 还是 vue3 所需要的，要额�
 ## 三、vite 打包兼容 file 协议打开
 
 https://zhuanlan.zhihu.com/p/650561443
+
+## 四、vite 配置加载 env 文件
+
+作用：使用 import.meta.env.时，有类型提示，并且可以读取 env 文件内值的原始类型，包括 boolean 等类型
+
+1. 安装插件
+
+```bash
+npm install vite-plugin-env-parse -D
+```
+
+2. 配置插件
+
+```ts
+// vite.config.js / vite.config.ts
+import { envParse } from'vite-plugin-env-parse'
+
+exportdefault {
+  plugins: [envParse()]
+}
+```
+
+参考文档：https://mp.weixin.qq.com/s/c_RveVmANSQFzvdz9sFzjQ
