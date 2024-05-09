@@ -5,7 +5,7 @@ import { sidebar } from "./slidebar.mts"
 export default defineConfig({
   title: "cc的学习历程",
   description: "write daily note",
-  base: "/vite-blog/",
+  // base: "/vite-blog/",
   head: [
     // 添加图标
     ["link", { rel: "icon", href: "./future.png" }],
