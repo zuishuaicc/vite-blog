@@ -65,7 +65,8 @@ export const sidebar = [
         collapsed: true,
         items: [
           { text: getIcon() + " node中使用esm", link: "/views/backend/node-esm" },
-          { text: getIcon() + " node中操作word", link: "/views/backend/node-word" },
+          { text: getIcon() + " node操作word", link: "/views/backend/node-word" },
+          { text: getIcon() + " node操作excel", link: "/views/backend/node-excel" },
           { text: getIcon() + " 三方登录表结构", link: "/views/backend/third-table" },
           { text: getIcon() + " node中使用子进程", link: "/views/backend/node-child_process" },
           { text: getIcon() + " node爬虫", link: "/views/backend/node-crawl" },
