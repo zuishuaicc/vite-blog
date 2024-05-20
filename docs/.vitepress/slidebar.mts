@@ -93,6 +93,7 @@ export const sidebar = [
               { text: getIcon() + " Rust基础", link: "/views/application/rust/rust-base" },
               { text: getIcon() + " Rust动态链接库", link: "/views/application/rust/rust-lib" },
               { text: getIcon() + " Rust扩展node插件", link: "/views/application/rust/rust-node" },
+              { text: getIcon() + " Rust开发wasm", link: "/views/application/rust/rust-wasm" },
             ],
           },
         ],
