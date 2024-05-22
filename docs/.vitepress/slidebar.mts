@@ -84,6 +84,7 @@ export const sidebar = [
         collapsed: true,
         items: [
           { text: getIcon() + " Election", link: "/views/application/electron" },
+          { text: getIcon() + " Election-rebuild", link: "/views/application/electron-rebuild" },
           { text: getIcon() + " node与动态连接库", link: "/views/application/node-cpp" },
           { text: getIcon() + " VScodeExtension", link: "/views/application/your-first-extension" },
           { text: getIcon() + " VScode调试应用", link: "/views/application/vscode-debug" },
