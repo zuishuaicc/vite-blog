@@ -1,6 +1,6 @@
 import { fruitesIcon } from "./fruitesIcon"
 // 依次获取图标
-let fruites = JSON.parse(JSON.stringify(fruitesIcon))
+let fruites: Array<string> = JSON.parse(JSON.stringify(fruitesIcon))
 function getIcon() {
   if (!fruites.length) {
     fruites = JSON.parse(JSON.stringify(fruites))
@@ -23,6 +23,7 @@ export const sidebar = [
         collapsed: true,
         items: [
           { text: getIcon() + " 常用算法", link: "/views/frontend/algorithms" },
+          { text: getIcon() + " js基础", link: "/views/frontend/js-base" },
           { text: getIcon() + " 样式合集", link: "/views/frontend/styleCollection" },
           { text: getIcon() + " css画悬浮球", link: "/views/frontend/css-ball" },
           { text: getIcon() + " vite.config配置", link: "/views/frontend/viteConfig" },
@@ -85,6 +86,7 @@ export const sidebar = [
         items: [
           { text: getIcon() + " Election", link: "/views/application/electron" },
           { text: getIcon() + " Election-rebuild", link: "/views/application/electron-rebuild" },
+          { text: getIcon() + " Election-sqlite", link: "/views/application/electron-sqlite" },
           { text: getIcon() + " node与动态连接库", link: "/views/application/node-cpp" },
           { text: getIcon() + " VScodeExtension", link: "/views/application/your-first-extension" },
           { text: getIcon() + " VScode调试应用", link: "/views/application/vscode-debug" },
