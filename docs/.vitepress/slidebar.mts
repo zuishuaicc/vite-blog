@@ -44,6 +44,7 @@ export const sidebar = [
           { text: getIcon() + " qiankun搭配vite", link: "/views/frontend/qiankun-vite" },
           { text: getIcon() + " 消除异步传染性", link: "/views/frontend/async-infect" },
           { text: getIcon() + " tsconfig详细配置", link: "/views/frontend/tsconfig-detail" },
+          { text: getIcon() + " tailwind使用", link: "/views/frontend/tailwind" },
           {
             text: "React",
             items: [
