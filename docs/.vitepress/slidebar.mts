@@ -55,7 +55,10 @@ export const sidebar = [
           },
           {
             text: "Vue",
-            items: [{ text: getIcon() + " vue源码解析", link: "/views/frontend/vue/vue-sourcecode" }],
+            items: [
+              { text: getIcon() + " vue源码解析", link: "/views/frontend/vue/vue-sourcecode" },
+              { text: getIcon() + " 自定义组件库", link: "/views/frontend/vue/component-lib" },
+            ],
           },
         ],
       },
