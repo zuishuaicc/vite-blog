@@ -61,6 +61,12 @@ export const sidebar = [
               { text: getIcon() + " vue3批量绑定ref", link: "/views/frontend/vue/vue-ref" },
             ],
           },
+          {
+            text: "Typescript",
+            items: [
+              { text: getIcon() + " TypeScript常见类型错误", link: "/views/frontend/typescript/type-error" },
+            ],
+          },
         ],
       },
     ],
