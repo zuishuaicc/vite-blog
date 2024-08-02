@@ -45,6 +45,7 @@ export const sidebar = [
           { text: getIcon() + " 消除异步传染性", link: "/views/frontend/async-infect" },
           { text: getIcon() + " tsconfig详细配置", link: "/views/frontend/tsconfig-detail" },
           { text: getIcon() + " tailwind使用", link: "/views/frontend/tailwind" },
+          { text: getIcon() + " 多行文本省略", link: "/views/frontend/ellipsis-text" },
           {
             text: "React",
             items: [
