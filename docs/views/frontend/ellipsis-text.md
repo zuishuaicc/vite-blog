@@ -521,10 +521,56 @@ observer = new ResizeObserver(() => {
 })
 observer.observe(boxEl.value)
 ```
+
 6. 省略的位置
    省略的位置可以是在开头、中间、结尾，就要稍微改下省略文本的计算方式。
 7. 优点
-  - ant-design-mobile实现方案真的不错
-  - 支持省略位置，可以在开头、中间、结尾
+
+- ant-design-mobile 实现方案真的不错
+- 支持省略位置，可以在开头、中间、结尾
+
 8. 缺点
-  - 计算有点复杂，需要耗费一点计算量
+
+- 计算有点复杂，需要耗费一点计算量
+
+## 封装 el-tooltip 自动显示隐藏
+
+```vue
+<script lang="ts" setup>
+interface Props {
+  content: string
+}
+const popos = defineProps<Props>()
+const disableTip = ref(true)
+const tooltipRef = ref<HTMLDivElement>()
+async function calcEll() {
+  await nextTick()
+  if (!tooltipRef.value) return
+  const { offsetWidth, scrollWidth } = tooltipRef.value
+  disableTip.value = scrollWidth <= offsetWidth
+}
+onBeforeMount(() => {
+  calcEll()
+})
+</script>
+
+<template>
+  <el-tooltip effect="dark" placement="top" :disabled="disableTip" v-bind="$attrs">
+    <template #content>
+      <div>{{ content }}</div>
+    </template>
+    <div ref="tooltipRef" class="tooltip-content">
+      {{ content }}
+    </div>
+  </el-tooltip>
+</template>
+
+<style scoped lang="less">
+.tooltip-content {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis; //文本溢出显示省略号
+  white-space: nowrap; //文本不会换行
+}
+</style>
+```
