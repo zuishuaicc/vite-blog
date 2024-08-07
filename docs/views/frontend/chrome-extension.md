@@ -112,3 +112,10 @@ outline: deep
 # 参考文档
 
 https://www.cnblogs.com/iovec/p/create-crx.html
+1. 搭建vue+vite+js的谷歌插件项目
+  vue版 https://juejin.cn/post/7269357836026298425
+  react版 https://github.com/Yuezi32/vite-vue-crx-2023autumn
+2. 搭建vite+ts谷歌插件项目
+  https://blog.csdn.net/sinat_36728518/article/details/129996304
+
+
