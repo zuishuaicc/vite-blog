@@ -46,6 +46,8 @@ export const sidebar = [
           { text: getIcon() + " tsconfig详细配置", link: "/views/frontend/tsconfig-detail" },
           { text: getIcon() + " tailwind使用", link: "/views/frontend/tailwind" },
           { text: getIcon() + " 多行文本省略", link: "/views/frontend/ellipsis-text" },
+          { text: getIcon() + " 原生js动画", link: "/views/frontend/web-animation-api" },
+          { text: getIcon() + " 移动端事件库", link: "/views/frontend/hammerjs" },
           {
             text: "React",
             items: [
