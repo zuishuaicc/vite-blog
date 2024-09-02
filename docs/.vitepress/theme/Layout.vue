@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import DefaultTheme from 'vitepress/theme'
-import {clickEffect } from './clickEffect'
-import {onMounted} from 'vue'
-onMounted(()=>{
-  clickEffect()
+import DefaultTheme from "vitepress/theme"
+import { useClickEffect } from "./hooks/useClickEffect"
+import { onMounted } from "vue"
+onMounted(() => {
+  useClickEffect()
 })
 
 const { Layout } = DefaultTheme
@@ -17,6 +17,4 @@ const { Layout } = DefaultTheme
   </Layout>
 </template>
 
-<style scoped lang='less'>
-
-</style>
+<style scoped lang="less"></style>

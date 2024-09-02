@@ -1,4 +1,4 @@
-export function clickEffect() {
+export function useClickEffect() {
   let balls: Ball[] = []
   let longPressed = false
   let longPress: number
