@@ -1,5 +1,10 @@
 <script lang="ts" setup>
 import DefaultTheme from 'vitepress/theme'
+import {clickEffect } from './clickEffect'
+import {onMounted} from 'vue'
+onMounted(()=>{
+  clickEffect()
+})
 
 const { Layout } = DefaultTheme
 </script>
