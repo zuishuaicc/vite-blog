@@ -3,7 +3,7 @@ import { fruitesIcon } from "./fruitesIcon"
 let fruites: Array<string> = JSON.parse(JSON.stringify(fruitesIcon))
 function getIcon() {
   if (!fruites.length) {
-    fruites = JSON.parse(JSON.stringify(fruites))
+    fruites = JSON.parse(JSON.stringify(fruitesIcon))
   }
   const icon = fruites.shift()
   return icon
@@ -66,9 +66,7 @@ export const sidebar = [
           },
           {
             text: "Typescript",
-            items: [
-              { text: getIcon() + " TypeScript常见类型错误", link: "/views/frontend/typescript/type-error" },
-            ],
+            items: [{ text: getIcon() + " TypeScript常见类型错误", link: "/views/frontend/typescript/type-error" }],
           },
         ],
       },
