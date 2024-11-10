@@ -87,6 +87,7 @@ export const sidebar = [
           { text: getIcon() + " node+tensorflow", link: "/views/backend/node-tensorflow" },
           { text: getIcon() + " Midway", link: "/views/backend/midway" },
           { text: getIcon() + " 任务队列", link: "/views/backend/task-manager" },
+          { text: getIcon() + " pnpm使用", link: "/views/backend/pnpm" },
         ],
       },
     ],

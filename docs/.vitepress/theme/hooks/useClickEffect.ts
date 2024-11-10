@@ -81,6 +81,7 @@ export function useClickEffect() {
     private multiplier: number
     private vx: number
     private vy: number
+    // 小圆点半径
     public r: number
     public color: string
     constructor(public x = origin.x, public y = origin.y) {
@@ -94,7 +95,7 @@ export function useClickEffect() {
       }
       this.vx = (this.multiplier + Math.random() * 0.5) * Math.cos(this.angle)
       this.vy = (this.multiplier + Math.random() * 0.5) * Math.sin(this.angle)
-      this.r = randBetween(8, 12) + 3 * Math.random()
+      this.r = randBetween(2, 4) + 3 * Math.random()
       this.color = colours[Math.floor(Math.random() * colours.length)]
     }
     update() {
