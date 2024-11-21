@@ -19,7 +19,7 @@ export const sidebar = [
   {
     items: [
       {
-        text: "前端",
+        text: "📁前端",
         collapsed: true,
         items: [
           { text: getIcon() + " 常用算法", link: "/views/frontend/algorithms" },
@@ -49,7 +49,7 @@ export const sidebar = [
           { text: getIcon() + " 原生js动画", link: "/views/frontend/web-animation-api" },
           { text: getIcon() + " 移动端事件库", link: "/views/frontend/hammerjs" },
           {
-            text: "React",
+            text: "📁React",
             items: [
               { text: getIcon() + " vite搭建React+ts", link: "/views/frontend/react/react-quick-start" },
               { text: getIcon() + " react实战问题", link: "/views/frontend/react/react-practice" },
@@ -57,7 +57,7 @@ export const sidebar = [
             ],
           },
           {
-            text: "Vue",
+            text: "📁Vue",
             items: [
               { text: getIcon() + " vue源码解析", link: "/views/frontend/vue/vue-sourcecode" },
               { text: getIcon() + " 自定义组件库", link: "/views/frontend/vue/component-lib" },
@@ -65,7 +65,7 @@ export const sidebar = [
             ],
           },
           {
-            text: "Typescript",
+            text: "📁Typescript",
             items: [{ text: getIcon() + " TypeScript常见类型错误", link: "/views/frontend/typescript/type-error" }],
           },
         ],
@@ -75,7 +75,7 @@ export const sidebar = [
   {
     items: [
       {
-        text: "服务端",
+        text: "📁服务端",
         collapsed: true,
         items: [
           { text: getIcon() + " node中使用esm", link: "/views/backend/node-esm" },
@@ -86,6 +86,7 @@ export const sidebar = [
           { text: getIcon() + " node爬虫", link: "/views/backend/node-crawl" },
           { text: getIcon() + " node+tensorflow", link: "/views/backend/node-tensorflow" },
           { text: getIcon() + " Midway", link: "/views/backend/midway" },
+          { text: "📁nestjs", items: [{ text: getIcon() + "nestjs实战", link: "/views/backend/nestjs/nestjs-practise" }] },
           { text: getIcon() + " 任务队列", link: "/views/backend/task-manager" },
           { text: getIcon() + " pnpm使用", link: "/views/backend/pnpm" },
         ],
@@ -95,7 +96,7 @@ export const sidebar = [
   {
     items: [
       {
-        text: "客户端",
+        text: "📁客户端",
         collapsed: true,
         items: [
           { text: getIcon() + " Election", link: "/views/application/electron" },
@@ -105,7 +106,7 @@ export const sidebar = [
           { text: getIcon() + " VScodeExtension", link: "/views/application/your-first-extension" },
           { text: getIcon() + " VScode调试应用", link: "/views/application/vscode-debug" },
           {
-            text: "Rust",
+            text: "📁Rust",
             items: [
               { text: getIcon() + " Rust基础", link: "/views/application/rust/rust-base" },
               { text: getIcon() + " Rust动态链接库", link: "/views/application/rust/rust-lib" },
@@ -120,7 +121,7 @@ export const sidebar = [
   {
     items: [
       {
-        text: "技术栈",
+        text: "📁技术栈",
         collapsed: true,
         items: [
           { text: getIcon() + " mac使用", link: "/views/techStack/mac" },

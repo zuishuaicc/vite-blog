@@ -77,9 +77,13 @@ export function useClickEffect() {
     }
   }
   class Ball {
+    // 圆点散射角度
     private angle: number
+    // 圆点散射半径
     private multiplier: number
+    // x轴移动速度
     private vx: number
+    // y轴移动速度
     private vy: number
     // 小圆点半径
     public r: number
@@ -91,11 +95,11 @@ export function useClickEffect() {
       if (longPressed == true) {
         this.multiplier = randBetween(14 + multiplier, 15 + multiplier)
       } else {
-        this.multiplier = randBetween(6, 12)
+        this.multiplier = randBetween(2, 8)
       }
       this.vx = (this.multiplier + Math.random() * 0.5) * Math.cos(this.angle)
       this.vy = (this.multiplier + Math.random() * 0.5) * Math.sin(this.angle)
-      this.r = randBetween(2, 4) + 3 * Math.random()
+      this.r = randBetween(2, 6) + 3 * Math.random()
       this.color = colours[Math.floor(Math.random() * colours.length)]
     }
     update() {
