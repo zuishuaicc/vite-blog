@@ -23,10 +23,12 @@ nest new nest-app
 初始化过程中可选择喜欢的 `nodejs` 包管理工具，个人推荐 pnpm
 
 ### 3.安装依赖
-
+生产依赖：
 ```bash
 pnpm add prisma-binding ts-node @prisma/client mockjs @nestjs/config class-validator class-transformer argon2 @nestjs/passport passport passport-local @nestjs/jwt passport-jwt lodash multer dayjs express redis @nestjs/throttler mockjs @nestjs/cache-manager cache-manager md5 @casl/prisma @casl/ability
-
+```
+开发以来：
+```bash
 pnpm add -D prisma typescript @types/node @types/mockjs @nestjs/mapped-types @types/passport-local @types/passport-jwt @types/express @types/lodash @types/multer @types/cache-manager @types/md5
 ```
 
