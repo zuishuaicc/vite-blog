@@ -23,11 +23,15 @@ nest new nest-app
 初始化过程中可选择喜欢的 `nodejs` 包管理工具，个人推荐 pnpm
 
 ### 3.安装依赖
+
 生产依赖：
+
 ```bash
 pnpm add prisma-binding ts-node @prisma/client mockjs @nestjs/config class-validator class-transformer argon2 @nestjs/passport passport passport-local @nestjs/jwt passport-jwt lodash multer dayjs express redis @nestjs/throttler mockjs @nestjs/cache-manager cache-manager md5 @casl/prisma @casl/ability
 ```
+
 开发依赖：
+
 ```bash
 pnpm add -D prisma typescript @types/node @types/mockjs @nestjs/mapped-types @types/passport-local @types/passport-jwt @types/express @types/lodash @types/multer @types/cache-manager @types/md5
 ```
@@ -189,17 +193,10 @@ async function run() {
 run()
 ```
 
-之后在运行命令生成填充数据
+之后在运行命令重置数据库生成填充数据
 
 ```bash
-npx prisma migrate dev
-```
-
-如果生成的填充数据有问题，修改 `seed.ts` 文件后，重新执行如下命令生成数据
-
-```bash
-npx prisma migrage reset
-npx prisma migrage dev
+npx prisma migrate reset
 ```
 
 ## 二、登陆模块实现
