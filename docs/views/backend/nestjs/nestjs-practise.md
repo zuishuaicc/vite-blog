@@ -198,8 +198,24 @@ run()
 ```bash
 npx prisma migrate reset
 ```
+## 二、通过 ts 配置别名导入
 
-## 二、登陆模块实现
+`tsconfig.json`:
+
+```diff
+{
+  "compilerOptions": {
+    // 其他配置
+    ···
++    "paths": {
++      "@/*":["src/*"]
++    }
+  }
+}
+
+```
+
+## 三、登陆模块实现
 
 ### 1.创建登陆模块
 
@@ -490,7 +506,7 @@ export class AuthController {
 }
 ```
 
-## 三、prisma 模块实现
+## 四、prisma 模块实现
 
 ### 1.创建 prisma 模块和服务
 
@@ -566,12 +582,12 @@ export class AuthService {
     if (!(await verify(user.password, dto.password))) {
       throw new BadRequestException("密码输入错误")
     }
-    return tuser
+    return user
   }
 }
 ```
 
-## 四、jwt 模块实现
+## 五、jwt 模块实现
 
 ### 1.在`auth.module.ts`中导入 jwt 模块
 
@@ -581,7 +597,6 @@ import { AuthService } from "./auth.service"
 import { AuthController } from "./auth.controller"
 import { JwtModule } from "@nestjs/jwt"
 import { ConfigModule, ConfigService } from "@nestjs/config"
-import { JwtStrategy } from "./strategy/jwt.strategy"
 
 @Module({
   imports: [
@@ -596,8 +611,8 @@ import { JwtStrategy } from "./strategy/jwt.strategy"
       },
     }),
   ],
-  providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
+  providers: [AuthService],
 })
 export class AuthModule {}
 ```
@@ -650,8 +665,224 @@ export class AuthService {
   }
 }
 ```
+## 六、token 身份验证
 
-## 五、使用拦截器格式化响应数据
+### 1.编写策略文件
+
+`src/auth/strategy/jwt.strategy.ts`:
+
+```ts
+import { PrismaService } from "@/prisma/prisma.service"
+import { Injectable } from "@nestjs/common"
+import { ConfigService } from "@nestjs/config"
+import { PassportStrategy } from "@nestjs/passport"
+import { ExtractJwt, Strategy } from "passport-jwt"
+
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
+  constructor(configService: ConfigService, private prisma: PrismaService) {
+    super({
+      // 解析用户提交的Bearer Token header数据
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      // 加密的secret
+      secretOrKey: configService.get("TOKEN_SECRET"),
+    })
+  }
+  // 验证通过后解析用户资料
+  async validate({ sub: id }) {
+    return await this.prisma.user.findUnique({
+      where: {
+        id,
+      },
+    })
+  }
+}
+```
+
+### 2.在使用模块中注册策略
+
+`auth.module.ts`
+
+```ts
+import { Module } from "@nestjs/common"
+import { AuthService } from "./auth.service"
+import { AuthController } from "./auth.controller"
+import { JwtModule } from "@nestjs/jwt"
+import { ConfigModule, ConfigService } from "@nestjs/config"
+import { JwtStrategy } from "./strategy/jwt.strategy"
+
+@Module({
+  imports: [
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory(config: ConfigService) {
+        return {
+          secret: config.get("TOKEN_SECRET"),
+          signOptions: { expiresIn: "100d" },
+        }
+      },
+    }),
+  ],
+  controllers: [AuthController],
+  providers: [AuthService, JwtStrategy], //注册策略
+})
+export class AuthModule {}
+```
+### 3. `app.module.ts`上全局导入ConfigModule
+```ts
+import { Module } from '@nestjs/common'
+import { AuthModule } from './auth/auth.module'
+import { PrismaModule } from './prisma/prisma.module'
+import { ConfigModule } from '@nestjs/config'
+
+@Module({
+  imports: [AuthModule, PrismaModule, ConfigModule.forRoot({ isGlobal: true })],
+})
+export class AppModule {}
+
+```
+### 4.在 controller 上使用 jwt 策略
+
+```ts
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common"
+import { AuthGuard } from "@nestjs/passport"
+import { CategoryService } from "./category.service"
+import { CreateCategoryDto } from "./dto/create-category.dto"
+import { UpdateCategoryDto } from "./dto/update-category.dto"
+
+@Controller("category")
+export class CategoryController {
+  constructor(private readonly categoryService: CategoryService) {}
+
+  @Post()
+  @UseGuards(AuthGuard("jwt")) //使用策略
+  create(@Body() createCategoryDto: CreateCategoryDto) {
+    return this.categoryService.create(createCategoryDto)
+  }
+
+  @Get()
+  findAll() {
+    return this.categoryService.findAll()
+  }
+
+  @Get(":id")
+  findOne(@Param("id") id: string) {
+    return this.categoryService.findOne(+id)
+  }
+
+  @Patch(":id")
+  update(@Param("id") id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
+    return this.categoryService.update(+id, updateCategoryDto)
+  }
+
+  @Delete(":id")
+  remove(@Param("id") id: string) {
+    return this.categoryService.remove(+id)
+  }
+}
+```
+
+## 七.使用聚合装饰器封装 jwt 策略
+
+### 1.创建角色枚举
+
+新建文件`src/auth/enum.ts`:
+
+```ts
+export enum Role {
+  ADMIN = "admin",
+  EDITOR = "editor",
+}
+```
+
+### 2.创建自定义守卫
+
+```bash
+nest g gu auth/guards/role --no-spec
+```
+
+### 3.编写自定义守卫
+
+`src/auth/guards/role.guard.ts`:
+
+```ts
+import { Role } from "@/auth/enum"
+import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common"
+import { Reflector } from "@nestjs/core"
+import { user } from "@prisma/client"
+import { Observable } from "rxjs"
+
+@Injectable()
+export class RoleGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+    const user = context.switchToHttp().getRequest().user as user
+    // 获取SetMetadata方法存储在上下文中的的roles数据源
+    const roles = this.reflector.getAllAndMerge<Role[]>("roles", [context.getHandler(), context.getClass()])
+    return roles.length ? roles.some((role) => role === user.role) : true
+  }
+}
+```
+
+### 4.编写聚合装饰器
+
+新建文件`src/decorator/auth.decorator.ts`:
+
+```ts
+import { Role } from "@/auth/enum"
+import { RoleGuard } from "@/auth/guards/role.guard"
+import { applyDecorators, SetMetadata, UseGuards } from "@nestjs/common"
+import { AuthGuard } from "@nestjs/passport"
+
+export function Auth(...roles: Role[]) {
+  return applyDecorators(SetMetadata("roles", roles), UseGuards(AuthGuard("jwt"), RoleGuard))
+}
+```
+
+### 5.controller 中使用聚合装饰器
+
+```ts
+import { Role } from "@/auth/enum"
+import { Auth } from "@/decorator/auth.decorator"
+import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common"
+import { CategoryService } from "./category.service"
+import { CreateCategoryDto } from "./dto/create-category.dto"
+import { UpdateCategoryDto } from "./dto/update-category.dto"
+
+@Controller("category")
+export class CategoryController {
+  constructor(private readonly categoryService: CategoryService) {}
+
+  @Post()
+  @Auth(Role.EDITOR, Role.ADMIN)
+  create(@Body() createCategoryDto: CreateCategoryDto) {
+    return this.categoryService.create(createCategoryDto)
+  }
+
+  @Get()
+  findAll() {
+    return this.categoryService.findAll()
+  }
+
+  @Get(":id")
+  findOne(@Param("id") id: string) {
+    return this.categoryService.findOne(+id)
+  }
+
+  @Patch(":id")
+  update(@Param("id") id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
+    return this.categoryService.update(+id, updateCategoryDto)
+  }
+
+  @Delete(":id")
+  remove(@Param("id") id: string) {
+    return this.categoryService.remove(+id)
+  }
+}
+```
+
+## 八、使用拦截器格式化响应数据
 
 ### 1.新建`src/transform.interceptor.ts`:
 
@@ -699,24 +930,8 @@ async function bootstrap() {
 bootstrap()
 ```
 
-## 六、通过 ts 配置别名导入
 
-`tsconfig.json`:
-
-```diff
-{
-  "compilerOptions": {
-    // 其他配置
-    ···
-+    "paths": {
-+      "@/*":["src/*"]
-+    }
-  }
-}
-
-```
-
-## 七、文章列表增删改查
+## 九、文章列表增删改查
 
 ### 1. 创建资源(包含 module、controller、 service、dto)
 
@@ -897,7 +1112,7 @@ export class ArticleController {
 }
 ```
 
-## 八、全局设置 api 请求前缀
+## 十、全局设置 api 请求前缀
 
 `main.ts`:
 
@@ -922,210 +1137,6 @@ async function bootstrap() {
 bootstrap()
 ```
 
-## 九、token 身份验证
-
-### 1.编写策略文件
-
-`src/auth/strategy/jwt.strategy.ts`:
-
-```ts
-import { PrismaService } from "@/prisma/prisma.service"
-import { Injectable } from "@nestjs/common"
-import { ConfigService } from "@nestjs/config"
-import { PassportStrategy } from "@nestjs/passport"
-import { ExtractJwt, Strategy } from "passport-jwt"
-
-@Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
-  constructor(configService: ConfigService, private prisma: PrismaService) {
-    super({
-      // 解析用户提交的Bearer Token header数据
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      // 加密的secret
-      secretOrKey: configService.get("TOKEN_SECRET"),
-    })
-  }
-  // 验证通过后解析用户资料
-  async validate({ sub: id }) {
-    return await this.prisma.user.findUnique({
-      where: {
-        id,
-      },
-    })
-  }
-}
-```
-
-### 2.在使用模块中注册策略
-
-`auth.module.ts`
-
-```ts
-import { Module } from "@nestjs/common"
-import { AuthService } from "./auth.service"
-import { AuthController } from "./auth.controller"
-import { JwtModule } from "@nestjs/jwt"
-import { ConfigModule, ConfigService } from "@nestjs/config"
-import { JwtStrategy } from "./strategy/jwt.strategy"
-
-@Module({
-  imports: [
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory(config: ConfigService) {
-        return {
-          secret: config.get("TOKEN_SECRET"),
-          signOptions: { expiresIn: "100d" },
-        }
-      },
-    }),
-  ],
-  providers: [AuthService, JwtStrategy], //注册策略
-  controllers: [AuthController],
-})
-export class AuthModule {}
-```
-
-### 3.在 controller 上使用 jwt 策略
-
-```ts
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common"
-import { AuthGuard } from "@nestjs/passport"
-import { CategoryService } from "./category.service"
-import { CreateCategoryDto } from "./dto/create-category.dto"
-import { UpdateCategoryDto } from "./dto/update-category.dto"
-
-@Controller("category")
-export class CategoryController {
-  constructor(private readonly categoryService: CategoryService) {}
-
-  @Post()
-  @UseGuards(AuthGuard("jwt")) //使用策略
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoryService.create(createCategoryDto)
-  }
-
-  @Get()
-  findAll() {
-    return this.categoryService.findAll()
-  }
-
-  @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.categoryService.findOne(+id)
-  }
-
-  @Patch(":id")
-  update(@Param("id") id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
-    return this.categoryService.update(+id, updateCategoryDto)
-  }
-
-  @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.categoryService.remove(+id)
-  }
-}
-```
-
-## 十.使用聚合装饰器封装 jwt 策略
-
-### 1.创建角色枚举
-
-新建文件`src/auth/enum.ts`:
-
-```ts
-export enum Role {
-  ADMIN = "admin",
-  EDITOR = "editor",
-}
-```
-
-### 2.创建自定义守卫
-
-```bash
-nest g gu auth/guards/role --no-spec
-```
-
-### 3.编写自定义守卫
-
-`src/auth/guards/role.guard.ts`:
-
-```ts
-import { Role } from "@/auth/enum"
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common"
-import { Reflector } from "@nestjs/core"
-import { user } from "@prisma/client"
-import { Observable } from "rxjs"
-
-@Injectable()
-export class RoleGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
-  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
-    const user = context.switchToHttp().getRequest().user as user
-    // 获取SetMetadata方法存储在上下文中的的roles数据源
-    const roles = this.reflector.getAllAndMerge<Role[]>("roles", [context.getHandler(), context.getClass()])
-    return roles.length ? roles.some((role) => role === user.role) : true
-  }
-}
-```
-
-### 4.编写聚合装饰器
-
-新建文件`src/decorator/auth.decorator.ts`:
-
-```ts
-import { Role } from "@/auth/enum"
-import { RoleGuard } from "@/auth/guards/role.guard"
-import { applyDecorators, SetMetadata, UseGuards } from "@nestjs/common"
-import { AuthGuard } from "@nestjs/passport"
-
-export function Auth(...roles: Role[]) {
-  return applyDecorators(SetMetadata("roles", roles), UseGuards(AuthGuard("jwt"), RoleGuard))
-}
-```
-
-### 5.controller 中使用聚合装饰器
-
-```ts
-import { Role } from "@/auth/enum"
-import { Auth } from "@/decorator/auth.decorator"
-import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common"
-import { CategoryService } from "./category.service"
-import { CreateCategoryDto } from "./dto/create-category.dto"
-import { UpdateCategoryDto } from "./dto/update-category.dto"
-
-@Controller("category")
-export class CategoryController {
-  constructor(private readonly categoryService: CategoryService) {}
-
-  @Post()
-  @Auth(Role.EDITOR, Role.ADMIN)
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoryService.create(createCategoryDto)
-  }
-
-  @Get()
-  findAll() {
-    return this.categoryService.findAll()
-  }
-
-  @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.categoryService.findOne(+id)
-  }
-
-  @Patch(":id")
-  update(@Param("id") id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
-    return this.categoryService.update(+id, updateCategoryDto)
-  }
-
-  @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.categoryService.remove(+id)
-  }
-}
-```
 
 ## 十一、上传文件
 
