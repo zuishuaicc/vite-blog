@@ -198,9 +198,10 @@ run()
 ```bash
 npx prisma migrate reset
 ```
-## 二、通过 ts 配置别名导入
 
-`tsconfig.json`:
+## 二、tsconfig 配置
+
+### 1. 通过 ts 配置别名导入
 
 ```diff
 {
@@ -210,6 +211,22 @@ npx prisma migrate reset
 +    "paths": {
 +      "@/*":["src/*"]
 +    }
+  }
+}
+```
+
+### 2. 配置允许默认导入按需导入的变量
+
+```diff
+{
+  "compilerOptions": {
+    // 其他配置
+    ···
++    "esModuleInterop": true,//ts编译时，支持默认导出 按需导出的变量
++    "allowSyntheticDefaultImports": true,//ts类型提示是否允许直接通过import默认导出 按需导出的变量
+    "paths": {
+      "@/*":["src/*"]
+    }
   }
 }
 
@@ -665,6 +682,7 @@ export class AuthService {
   }
 }
 ```
+
 ## 六、token 身份验证
 
 ### 1.编写策略文件
@@ -729,19 +747,21 @@ import { JwtStrategy } from "./strategy/jwt.strategy"
 })
 export class AuthModule {}
 ```
-### 3. `app.module.ts`上全局导入ConfigModule
+
+### 3. `app.module.ts`上全局导入 ConfigModule
+
 ```ts
-import { Module } from '@nestjs/common'
-import { AuthModule } from './auth/auth.module'
-import { PrismaModule } from './prisma/prisma.module'
-import { ConfigModule } from '@nestjs/config'
+import { Module } from "@nestjs/common"
+import { AuthModule } from "./auth/auth.module"
+import { PrismaModule } from "./prisma/prisma.module"
+import { ConfigModule } from "@nestjs/config"
 
 @Module({
   imports: [AuthModule, PrismaModule, ConfigModule.forRoot({ isGlobal: true })],
 })
 export class AppModule {}
-
 ```
+
 ### 4.在 controller 上使用 jwt 策略
 
 ```ts
@@ -929,7 +949,6 @@ async function bootstrap() {
 }
 bootstrap()
 ```
-
 
 ## 九、文章列表增删改查
 
@@ -1137,14 +1156,14 @@ async function bootstrap() {
 bootstrap()
 ```
 
-
 ## 十一、上传文件
 
 ### 1. 创建上传模块
 
 ```bash
-nest g s upload --no-spec
+nest g mo upload
 nest g co upload --no-spec
+nest g s upload --no-spec
 ```
 
 ### 2.导入 MulterModule 模块注册
@@ -1243,7 +1262,50 @@ export class UploadController {
 }
 ```
 
-### 4.修改返回文件路径前缀
+### 5. 校验上传文件不能为空
+
+#### ①. 新建校验文件`fileIsDefinedValidator`:
+
+```ts
+import { FileValidator } from "@nestjs/common"
+
+export default class FileIsDefinedValidator extends FileValidator {
+  constructor() {
+    // parent class constructor requires any object as
+    // argument, i think it is type mistake, so i pass
+    // empty object
+    super({})
+  }
+
+  isValid(file?: unknown): boolean {
+    return !!file
+  }
+  buildErrorMessage(): string {
+    return "File is not defined"
+  }
+}
+```
+
+#### ②. UploadedFile 装饰器内使用
+
+```ts
+import FileIsDefinedValidator from "@/common/FileIsDefinedValidator"
+import { image } from "@/decorator/upload.decorator"
+import { Controller, ParseFilePipe, Post, UploadedFile } from "@nestjs/common"
+
+@Controller("upload")
+export class UploadController {
+  @Post("image")
+  @image("file")
+  uploadImage(@UploadedFile(new ParseFilePipe({ validators: [new FileIsDefinedValidator()] })) file: Express.Multer.File) {
+    return {
+      url: `${file.path}`,
+    }
+  }
+}
+```
+
+### 6.修改返回文件路径前缀
 
 ```ts
 import { NestFactory, Reflector } from "@nestjs/core"
@@ -1251,7 +1313,6 @@ import { AppModule } from "./app.module"
 import Validate from "./common/validate"
 import { TransformInterceptor } from "./transform.interceptor"
 import { NestExpressApplication } from "@nestjs/platform-express"
-import { ClassSerializerInterceptor } from "@nestjs/common"
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule)
