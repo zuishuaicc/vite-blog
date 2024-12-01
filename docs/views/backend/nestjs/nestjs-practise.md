@@ -1264,7 +1264,7 @@ export class UploadController {
 
 ### 5. 校验上传文件不能为空
 
-#### ①. 新建校验文件`fileIsDefinedValidator`:
+#### ①. 新建校验文件`fileIsDefinedValidator.ts`:
 
 ```ts
 import { FileValidator } from "@nestjs/common"
@@ -1286,7 +1286,7 @@ export default class FileIsDefinedValidator extends FileValidator {
 }
 ```
 
-#### ②. UploadedFile 装饰器内使用
+#### ②. 在 UploadedFile 装饰器内使用校验类
 
 ```ts
 import FileIsDefinedValidator from "@/common/FileIsDefinedValidator"
