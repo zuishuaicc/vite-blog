@@ -1205,7 +1205,7 @@ export class UploadModule {}
 
 ### 3.编写上传装饰器
 
-`src/upload/upload.ts`:
+`ssrc/decorator/upload.decorator.ts`:
 
 ```ts
 import { applyDecorators, UnsupportedMediaTypeException, UseInterceptors } from "@nestjs/common"
@@ -1248,7 +1248,8 @@ export function document(field = "file") {
 
 ```ts
 import { Controller, Post, UploadedFile } from "@nestjs/common"
-import { image } from "./upload"
+import { image } from '@/decorator/upload.decorator'
+
 
 @Controller("upload")
 export class UploadController {
@@ -1264,7 +1265,7 @@ export class UploadController {
 
 ### 5. 校验上传文件不能为空
 
-#### ①. 新建校验文件`fileIsDefinedValidator.ts`:
+#### ①. 新建校验文件`src/common/fileIsDefinedValidator.ts`:
 
 ```ts
 import { FileValidator } from "@nestjs/common"
@@ -1289,7 +1290,7 @@ export default class FileIsDefinedValidator extends FileValidator {
 #### ②. 在 UploadedFile 装饰器内使用校验类
 
 ```ts
-import FileIsDefinedValidator from "@/common/FileIsDefinedValidator"
+import FileIsDefinedValidator from "@/common/fileIsDefinedValidator"
 import { image } from "@/decorator/upload.decorator"
 import { Controller, ParseFilePipe, Post, UploadedFile } from "@nestjs/common"
 
