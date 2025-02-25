@@ -25,3 +25,32 @@ docker run --name cc-mysql -p 33060:3306 -e MYSQL_ROOT_PASSWORD=123456 -d mysql
 ```bash
 docker run -itd --name cc-redis -p 6379:6379 redis
 ```
+## Docker Hub镜像源
+1. 打开配置文件
+```bash
+sudo vim /etc/docker/daemon.json
+```
+2. 写入配置
+```bash
+{
+    "registry-mirrors": [
+        "https://docker.m.daocloud.io",
+        "https://dockerproxy.com",
+        "https://docker.mirrors.ustc.edu.cn",
+        "https://docker.nju.edu.cn",
+        "https://iju9kaj2.mirror.aliyuncs.com",
+        "http://hub-mirror.c.163.com",
+        "https://cr.console.aliyun.com",
+        "https://hub.docker.com",
+        "http://mirrors.ustc.edu.cn"
+    ]
+}
+```
+3. 重新加载配置文件
+```bash
+sudo systemctl daemon-reload
+```
+4. 重启docker
+```bash
+sudo systemctl restart docker
+```
