@@ -64,7 +64,14 @@ chmod +x ~/.docker/cli-plugins/docker-compose
 ```bash
 docker compose version
 ```
-
+5. 启动docker compose
+```bash
+docker compose up --build -d
+```
+6. 关闭docker compose 并销毁容器
+```bash
+docker compose down
+```
 ## Docker Hub 镜像源
 
 1. 打开配置文件
