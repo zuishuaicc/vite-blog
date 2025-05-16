@@ -3,7 +3,7 @@ outline: deep
 ---
 
 # vue3实现defineModel宏
-创建`useDefineModel.ts`hook
+## 1.创建`useDefineModel.ts`hook
 ```ts
 import { computed } from 'vue'
 
