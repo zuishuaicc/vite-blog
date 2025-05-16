@@ -62,6 +62,7 @@ export const sidebar = [
               { text: getIcon() + " vue源码解析", link: "/views/frontend/vue/vue-sourcecode" },
               { text: getIcon() + " 自定义组件库", link: "/views/frontend/vue/component-lib" },
               { text: getIcon() + " vue3批量绑定ref", link: "/views/frontend/vue/vue-ref" },
+              { text: getIcon() + " vue3实现defineModel宏", link: "/views/frontend/vue/vue-defineModel" },
             ],
           },
           {

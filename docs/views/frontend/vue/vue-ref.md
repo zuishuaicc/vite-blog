@@ -34,7 +34,6 @@ const setRef= (el, item) => {
   }
 }
 
-console.log(selectRef.value['aaa'])
 // 打印出来的值为 动态绑定的选择框aaa的ref属性
 
 ```
