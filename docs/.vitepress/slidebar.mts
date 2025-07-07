@@ -87,7 +87,12 @@ export const sidebar = [
           { text: getIcon() + " node爬虫", link: "/views/backend/node-crawl" },
           { text: getIcon() + " node+tensorflow", link: "/views/backend/node-tensorflow" },
           { text: getIcon() + " Midway", link: "/views/backend/midway" },
-          { text: "📁nestjs", items: [{ text: getIcon() + "nestjs实战", link: "/views/backend/nestjs/nestjs-practise" }] },
+          {
+            text: "📁nestjs", items: [
+              { text: getIcon() + "nestjs实战", link: "/views/backend/nestjs/nestjs-practise" },
+              { text: getIcon() + "微信支付", link: "/views/backend/nestjs/nestjs-wxpay" }
+            ]
+          },
           { text: getIcon() + " 任务队列", link: "/views/backend/task-manager" },
           { text: getIcon() + " pnpm使用", link: "/views/backend/pnpm" },
         ],
