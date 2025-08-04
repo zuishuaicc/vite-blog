@@ -48,6 +48,7 @@ export const sidebar = [
           { text: getIcon() + " 多行文本省略", link: "/views/frontend/ellipsis-text" },
           { text: getIcon() + " 原生js动画", link: "/views/frontend/web-animation-api" },
           { text: getIcon() + " 移动端事件库", link: "/views/frontend/hammerjs" },
+          { text: getIcon() + " Eslint配置相关", link: "/views/frontend/eslint-config" },
           {
             text: "📁React",
             items: [
