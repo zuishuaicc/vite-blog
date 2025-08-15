@@ -255,3 +255,131 @@ export default defineConfig(({ mode }) => ({
   },
 }))
 ```
+## 三、主子应用通信
+### 主应用
+#### 1.封装actions
+```ts
+// src/utils/actions.ts
+import { type MicroAppStateActions, initGlobalState } from 'qiankun'
+
+const initState = {
+  count: 0
+}
+
+// 初始化 initState
+const actions: MicroAppStateActions = initGlobalState(initState)
+
+actions.onGlobalStateChange((initState, prev) => {
+  // state: 变更后的状态; prev 变更前的状态
+  console.log('主应用检测到state变更:', initState, prev)
+})
+
+// 自定义方法下发到子应用
+// actions.getGlobalState = function () {
+//   return initState
+// }
+
+export default actions
+```
+#### 2.挂载actions
+```ts
+// src/utils/registerMicroApps.ts
+
+const startQiankun = (microApps: any) => {
+  const apps: any = []
+  microApps.forEach((app: any) => {
+    apps.push({
+      name: app.name,
+      entry: app.entry[NODE_ENV],
+      container: app.container || appContainer,
+      activeRule: app.activeRule,
+      props: { data: {}, routerBase: app.activeRule, actions: actions }
+    })
+  })
+  // ...其他操作
+}
+```
+#### 3.使用actions
+```ts
+onMounted(() => {
+  // 注册一个观察者函数，监听子应用发送的数据
+  actions.onGlobalStateChange((state, preState) => {
+    menuStore.changeAtMessageNum(state.atMessageNum)
+  })
+  // 主应用修改全局状态
+  actions.setGlobalState({count:1})
+})
+```
+### 子应用
+#### 1.子应用封装actions
+```ts
+import { QiankunProps } from 'vite-plugin-qiankun/dist/helper'
+
+export type OnGlobalStateChangeCallback = (state: Record<string, any>, prevState: Record<string, any>) => void
+export interface MicroAppStateActions extends QiankunProps {
+  onGlobalStateChange?: (callback: OnGlobalStateChangeCallback, fireImmediately?: boolean) => void
+  setGlobalState?: (state: Record<string, any>) => boolean
+  offGlobalStateChange?: () => boolean
+}
+
+function emptyAction() {
+  // 警告提示，当前使用的是空action
+  console.warn('current execute action is empty')
+  return false
+}
+// 设置一个用于通信的 action类
+
+class Action {
+  actions: MicroAppStateActions = {
+    setGlobalState: emptyAction,
+    offGlobalStateChange: emptyAction,
+    onGlobalStateChange: emptyAction
+  }
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  constructor() {}
+  // 默认为空Action
+
+  // 设置actions
+  setActions(actions: MicroAppStateActions) {
+    this.actions = actions
+  }
+  // 映射
+  onGlobalStateChange(fn: (state: any) => void, flag: boolean) {
+    return this.actions.onGlobalStateChange?.(fn, flag)
+  }
+  // 映射
+  setGlobalState(args: Record<string, any>) {
+    return this.actions.setGlobalState?.(args)
+  }
+}
+const actions = new Action()
+export default actions
+```
+#### 2.子应用挂载actions
+```ts
+// src/main.ts
+import actions, { type MicroAppStateActions } from './actions';
+
+function render(props: MicroAppStateActions = {} as MicroAppStateActions ) {
+  const { container } = props
+  
+  actions.setActions(props)
+  
+  instance = new Vue({
+    router,
+    store,
+    render: (h: any) => h(App)
+  }).$mount(
+    container ? container.querySelector('#sub-app') : '#sub-app'
+  )
+}
+```
+#### 3.子应用使用actions
+```ts
+// 向主应用发送消息
+actions.setGlobalState({ count: data.dto?.unreadCount })
+// 监听主应用消息
+actions.onGlobalStateChange((state, preState) => {
+    console.log(preState, state, 'mainreceive')
+})
+```
