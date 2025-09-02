@@ -30,3 +30,6 @@ type AtleastOne<T,U> = {[k in keyof T]: Pick<T, K>}=Partial<T>&U[keyof U]
 ## 仿 b 站开源项目
 
 https://github.com/galaxy-s10/billd-live?tab=readme-ov-file
+
+## 终端彩色打印日志
+chalk、gradient-string
