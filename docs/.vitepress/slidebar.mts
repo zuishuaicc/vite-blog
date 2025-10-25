@@ -132,6 +132,7 @@ export const sidebar = [
         collapsed: true,
         items: [
           { text: getIcon() + " mac使用", link: "/views/techStack/mac" },
+          { text: getIcon() + " git操作", link: "/views/techStack/git" },
           { text: getIcon() + " navicat使用（mac版本）", link: "/views/techStack/navicat" },
           { text: getIcon() + " docker使用", link: "/views/techStack/docker" },
           { text: getIcon() + " bat命令", link: "/views/techStack/bat" },
@@ -141,6 +142,7 @@ export const sidebar = [
           { text: getIcon() + " vim操作", link: "/views/techStack/vim-operate" },
           { text: getIcon() + " methodPlug", link: "/views/techStack/method-plug" },
           { text: getIcon() + " 日常杂记", link: "/views/techStack/dailyNote" },
+          
         ],
       },
     ],
