@@ -3,6 +3,7 @@ outline: deep
 ---
 
 ## 防火墙指令
+
 ```bash
 firewall-cmd --add-port=1935/tcp --permanent #开放端口
 firewall-cmd --list-all #查看已开放的端口
@@ -11,7 +12,9 @@ firewall-cmd --reload #防火墙重启
 firewall-cmd --query-port=80/tcp #查看指定端口是否开放
 systemctl start firewalld #重启防火墙
 ```
+
 ## 文件操作指令
+
 ```bash
 ll #查看所有前端包记录
 rm -rf dist #删除当前包
@@ -20,12 +23,16 @@ mv 初始文件名 改后文件名 #重命名文件
 touch #创建文件
 cp #复制
 ```
+
 ## mongodb 操作
+
 ```bash
 mongod -f mongodb.cfg --fork 开启
 mongod -f mongodb.cfg --shutdown 关闭
 ```
-## mongodb配置文件
+
+## mongodb 配置文件
+
 ```yml
 dbpath=/usr/local/src/mongodb/data
 logpath=/usr/local/src/mongodb/logs/mongodb.log
@@ -36,7 +43,9 @@ fork=true
 maxConns=5000
 auth=true
 ```
-## nginx配置文件
+
+## nginx 配置文件
+
 ```yml
 #user  nobody;
 worker_processes  1;
@@ -136,10 +145,48 @@ http {
     #}
 }
 ```
-## nginx操作指令
+
+## nginx 操作指令
+
 ```bash
 nginx:启动
 nginx -s reload #重启
 nginx -s stop #停止服务
 ps -ef | grep nginx #查看过滤nginx运行状态
+```
+
+## dnf 操作
+
+- 查看 dnf 自动更新定时任务
+
+```bash
+sudo systemctl status dnf-makecache.timer
+```
+
+- 关闭 dnf 自动更新的定时任务
+
+```bash
+sudo systemctl disable --now dnf-makecache.timer
+```
+
+- 升序查看 dnf 日志
+
+```bash
+journalctl -u dnf-makecache.service
+```
+
+- 降序查看 dnf 日志
+
+```bash
+journalctl -exu dnf-makecache.service
+```
+
+**自动更新定时任务默认开启，尽量关闭自动更新，防止应用运行阶段意外撑爆内存导致服务挂掉**
+
+## atop 操作
+
+查看 atop 指定时间日志
+
+```bash
+atop -r /var/log/atop/atop_YYYYMMDD
 ```
