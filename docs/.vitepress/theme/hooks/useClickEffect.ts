@@ -25,7 +25,7 @@ export function useClickEffect() {
       function (e) {
         pushBalls(randBetween(10, 20), e.clientX, e.clientY)
         document.body.classList.add("is-pressed")
-        longPress = setTimeout(function () {
+        longPress = window.setTimeout(function () {
           document.body.classList.add("is-longpress")
           longPressed = true
         }, 500)
