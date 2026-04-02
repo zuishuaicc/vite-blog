@@ -63,12 +63,17 @@ export const sidebar = [
               { text: getIcon() + " vue源码解析", link: "/views/frontend/vue/vue-sourcecode" },
               { text: getIcon() + " 自定义组件库", link: "/views/frontend/vue/component-lib" },
               { text: getIcon() + " vue3批量绑定ref", link: "/views/frontend/vue/vue-ref" },
-              { text: getIcon() + " vue3实现defineModel宏", link: "/views/frontend/vue/vue-defineModel" },
+              { text: getIcon() + " defineModel宏", link: "/views/frontend/vue/vue-defineModel" },
+              { text: getIcon() + " 全局loading", link: "/views/frontend/vue/global-loading" },
             ],
           },
           {
             text: "📁Typescript",
-            items: [{ text: getIcon() + " TypeScript常见类型错误", link: "/views/frontend/typescript/type-error" }],
+            items: [{ text: getIcon() + " TS常见类型问题", link: "/views/frontend/typescript/type-error" }],
+          },
+          {
+            text: "📁Nextjs",
+            items: [{ text: getIcon() + " nextjs实战", link: "/views/frontend/nextjs/nextjs-base" }],
           },
         ],
       },
@@ -88,14 +93,14 @@ export const sidebar = [
           { text: getIcon() + " node爬虫", link: "/views/backend/node-crawl" },
           { text: getIcon() + " node+tensorflow", link: "/views/backend/node-tensorflow" },
           { text: getIcon() + " Midway", link: "/views/backend/midway" },
+          { text: getIcon() + " 任务队列", link: "/views/backend/task-manager" },
+          { text: getIcon() + " pnpm使用", link: "/views/backend/pnpm" },
           {
             text: "📁nestjs", items: [
               { text: getIcon() + "nestjs实战", link: "/views/backend/nestjs/nestjs-practise" },
               { text: getIcon() + "微信支付", link: "/views/backend/nestjs/nestjs-wxpay" }
             ]
           },
-          { text: getIcon() + " 任务队列", link: "/views/backend/task-manager" },
-          { text: getIcon() + " pnpm使用", link: "/views/backend/pnpm" },
         ],
       },
     ],
@@ -115,7 +120,9 @@ export const sidebar = [
           {
             text: "📁Rust",
             items: [
-              { text: getIcon() + " Rust基础", link: "/views/application/rust/rust-base" },
+              { text: getIcon() + " Rust工程化", link: "/views/application/rust/rust-base" },
+              { text: getIcon() + " Rust基础语法", link: "/views/application/rust/rust-syntax" },
+              { text: getIcon() + " Rust进阶语法", link: "/views/application/rust/rust-advanced" },
               { text: getIcon() + " Rust动态链接库", link: "/views/application/rust/rust-lib" },
               { text: getIcon() + " Rust扩展node插件", link: "/views/application/rust/rust-node" },
               { text: getIcon() + " Rust开发wasm", link: "/views/application/rust/rust-wasm" },
@@ -142,7 +149,8 @@ export const sidebar = [
           { text: getIcon() + " vim操作", link: "/views/techStack/vim-operate" },
           { text: getIcon() + " methodPlug", link: "/views/techStack/method-plug" },
           { text: getIcon() + " 日常杂记", link: "/views/techStack/dailyNote" },
-          
+          { text: getIcon() + " 内网穿透", link: "/views/techStack/cloudflared" },
+
         ],
       },
     ],

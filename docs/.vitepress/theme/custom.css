@@ -41,3 +41,7 @@
     text-decoration: none;
   }
 }
+
+.main img {
+  cursor: zoom-in; /* 移动到图片上，可放大 */
+}

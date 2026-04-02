@@ -3,8 +3,8 @@
 # 忽略错误
 set -e
 
-# 构建
-npm run docs:build
+# 构建 worlflow内已经有build了，这里不需要build了
+# pnpm run docs:build
 
 # 进入待发布的目录
 # cd docs/.vitepress/dist

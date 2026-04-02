@@ -32,6 +32,25 @@ type AtleastOne<T,U> = {[k in keyof T]: Pick<T, K>}=Partial<T>&U[keyof U]
 https://github.com/galaxy-s10/billd-live?tab=readme-ov-file
 
 ## 终端彩色打印日志
+
 chalk、gradient-string
+
 ## clip-path工具
+
 https://techbrood.com/
+
+## vitepress插件
+
+https://github.com/T-miracle/vitepress-plugins
+
+## 使用valine自定义实现vitepress评论系统
+
+http://f.zuo11.com/3-optimize/fast-create-website/#%E6%B3%A8%E5%86%8C-valine
+
+## 对象存储RustFS
+
+https://rustfs.com/
+
+## 使用canvas构建页面 uikit
+
+https://github.com/xiaxiangfeng/beyond-dom-ui
