@@ -4,6 +4,7 @@ import { sidebar } from "./slidebar.mts"
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "cc的学习历程",
+  ignoreDeadLinks: true ,// 👈 加上这一行，忽略所有死链接
   description: "write daily note",
   // base: "/vite-blog/",//github pages使用custom domain时，不需要仓库名
   head: [
