@@ -368,3 +368,15 @@ console.log(userColumn);
 //   dataIndex: 'id' // Type '"id"' is not assignable to type '"email"'
 // };
 ```
+
+## 设置项目typescript版本
+
+强制项目tsconfig.json依据当前项目安装的typescript版本来校验项目,而不是依靠vscode内置的typescript版本
+`.vscode/settting.json`
+
+```json
+{
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true
+}
+```
