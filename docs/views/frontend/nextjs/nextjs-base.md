@@ -3339,7 +3339,7 @@ export default function Home() {
 ### CSS Modules
 
 CSS Modules 是一种 CSS 模块化方案，可以让你在组件中使用CSS模块化，类似于Vue的单文件组件(scoped)。
-Next.js已经内置了对CSS Modules的支持，你只需要在创建文件的时候新增`.module.css`后缀即可。例如i`ndex.module.css`。
+Next.js已经内置了对CSS Modules的支持，你只需要在创建文件的时候新增`.module.css`后缀即可。例如`index.module.css`。
 
 ```css
 /** index.module.css */
@@ -3525,4 +3525,1071 @@ const StyledButton = styled.button`
 export default function Home() {
   return <StyledButton>Click me</StyledButton>;
 }
+```
+
+## SEO
+
+### robots.txt
+
+#### 配置参数解释
+
+1.  `User-agent:Baiduspider`----允许的爬虫名字，所有都允许时，使用`*`
+2.  `Disallow: /medialist/detail/`----不允许爬虫机器人访问的目录
+3.  `Allow:/`----爬虫机器人可以访问哪些页面
+4.  `Sitemap:https://www.xxxx.com/sitmap.xml`----网站地图URL
+5.  `Host:www.xxxx.com`----网站域名
+
+#### Nextjs中配置robots.txt
+
+Next.js中实现`robots.txt`非常简单，我们是`AppRouter`，所以直接在app目录下创建一个`robots.[ts | js]`文件即可。
+
+```ts
+import type { MetadataRoute } from "next";
+export default function robots(): MetadataRoute.Robots {
+  return {
+    //如果是通用规则，可以这样写，就直接是一个对象类似于掘金
+    // rules: {
+    //    userAgent: '*',
+    //    allow: '/',
+    //    disallow: '/private/',
+    //  },
+    //自定义爬虫机器人规则可以用数组形式，就是一个数组类似于哔哩哔哩
+    rules: [
+      {
+        userAgent: "Googlebot", //搜索引擎爬虫的名称
+        allow: "/", //允许访问的页面
+        disallow: "/api/", //不允许访问的页面
+        crawlDelay: 10, //访问间隔时间(Google机器人不支持该参数，其他部分爬虫机器人支持该参数)
+      },
+      {
+        userAgent: "Baiduspider",
+        allow: "/",
+        disallow: "/api/",
+        crawlDelay: 10,
+      },
+      {
+        userAgent: "Bingbot",
+        allow: "/",
+        disallow: "/api/",
+        crawlDelay: 10,
+      },
+      {
+        userAgent: "YandexBot",
+        allow: "/",
+        disallow: "/api/",
+        crawlDelay: 10,
+      },
+      {
+        userAgent: "Sogou spider",
+        allow: "/",
+        disallow: "/api/",
+        crawlDelay: 10,
+      },
+    ],
+    sitemap: "xxxx", //网站地图的URL
+    //如果有多个可以写成一个数组
+    //sitemaps: ['https://www.xxxxxx.com/sitemap.xml', 'https://www.xxxxxx.com/sitemap2.xml'],
+  };
+}
+```
+
+### sitemap.xml
+
+#### `sitemap.xml` 是网站地图，用来向搜索引擎提供一批希望被发现的页面 URL（以及可选的更新时间、更新频率、优先级等提示信息），帮助爬虫更系统地遍历站点。哪些路径不允许抓取或不希望被索引，通常由 `robots.txt`、`noindex` 等机制单独声明，而不是靠 sitemap 来“禁止”。
+
+#### 主要作用
+
+1. 帮助搜索引擎发现页面 如果你是新网站，并且有大量的路由是深层级的，爬虫很难发现你的页面，这时候你可以使用sitemap.xml来告诉搜索引擎你的页面有哪些，方便搜索引擎抓取。
+2. 利于被发现与纳入索引的考虑：例如掘金这类内容量很大的站点，会通过 sitemap（常按类型或分页拆成多个 XML）把文章 URL 结构化地提供给搜索引擎，提高被抓取、被纳入索引的机会
+
+#### Nestjs中配置sitemap
+
+`sitemap.ts`,放在app目录下
+
+```ts
+import type { MetadataRoute } from "next";
+export default function sitemap(): MetadataRoute.Sitemap {
+  return [
+    {
+      url: "https://example.com",
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 1,
+      images: ["http://localhost:3000/xxxxxxxxxx.jpg"],
+    },
+    {
+      url: "https://example.com/about",
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+      videos: [
+        {
+          thumbnail_loc: "http://localhost:3000/xxxxxxxxxx.jpg",
+          title: "视频标题",
+          description: "视频描述",
+          duration: 100,
+          publication_date: new Date(),
+        },
+      ],
+    },
+    {
+      url: "https://example.com/blog",
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.5,
+    },
+  ];
+}
+```
+
+#### 进阶用法：拆成多个 sitemap（generateSitemaps）
+
+```ts
+import type { MetadataRoute } from "next";
+
+/** 每个 id 对应一份子 sitemap */
+export async function generateSitemaps() {
+  return [{ id: "1" }, { id: "2" }, { id: "3" }];
+}
+
+const SEGMENT_BY_ID: Record<string, string> = {
+  "1": "post",
+  "2": "user",
+  "3": "new",
+};
+
+export default async function sitemap(props: {
+  id: Promise<string>;
+}): Promise<MetadataRoute.Sitemap> {
+  const id = await props.id;
+  const segment = SEGMENT_BY_ID[id]; //根据id获取对应的segment
+  if (!segment) return [];
+
+  const num = 5; //模拟生成5条URL
+  const entries: MetadataRoute.Sitemap = [];
+
+  for (let i = 0; i < num; i++) {
+    entries.push({
+      url: `http://localhost:3000/demo/${segment}/${i}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.6,
+    });
+  }
+
+  return entries;
+}
+```
+
+### TDK
+
+TDK 是 `Title`、`Description`、`Keywords` 的缩写，是 `SEO`（搜索引擎优化）里的核心元信息，也常统称为页面的元数据。  
+在原生 `HTML` 里，它们大致对应 `<head>` 中的 `<title>`、`<meta name="description">`、`<meta name="keywords">` 等。使用 `App Router` 时，`Next.js` 通过 `export const metadata` 或 `generateMetadata` 生成上述标签，由框架写入文档头部，无需手写整段 `<head>`。
+
+#### TDK 的作用
+
+1. **title**  
+   title 是页面标题，通常会出现在浏览器标签页和搜索引擎结果页（SERP）上，对点击率影响最大。建议简洁、准确，并体现当前页与站点/栏目的关系（例如与根布局的 title.template 搭配使用，见下文）。
+
+2. **description**  
+   description 是页面摘要，常被用作 SERP 中的描述文案（搜索引擎也可能根据内容自行改写）。应用一两句话概括页面价值，避免堆砌关键词。
+
+3. **keywords**  
+   keywords 用于概括页面主题。主流搜索引擎对 `<meta name="keywords">` 的排序权重已很低，但规范填写仍有利于内部归类、CMS 或后续扩展；不要为 SEO 而重复、堆砌无意义词组。
+
+#### 书写上的小建议（实践向）
+
+- title：不同页面应有区分度；全站共用的后缀可通过根布局的 `title.template` 统一拼接。
+- description：长度适中即可（常见建议约 150 字以内作参考），重点写清「这一页解决什么问题」。
+- keywords：用数组表达多个词即可，与页面内容一致即可。
+
+#### Next.js 中如何配置 TDK
+
+我们使用 App Router，一般在 `app` 目录下的根布局 `layout.tsx` 中导出 `metadata`，作为全站默认 TDK；子路由下的 `layout.tsx` / `page.tsx` 若再次导出 `metadata`，会对父级进行覆盖或按字段合并（例如子页面的 `title` 会覆盖继承来的默认标题，具体以 `Metadata` 文档 为准）。
+
+- **全局配置metadata**
+
+`metadata` 为静态对象，适合不依赖请求参数、不依赖异步接口数据的场景。
+
+```ts
+// app/layout.tsx
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "小满优选",
+  description: "小满优选描述",
+  keywords: ["小满优选", "优选"],
+};
+```
+
+- **子路由覆盖全局配置**
+
+子路由需要单独展示时，在对应 page.tsx（或该段的 layout.tsx） 中再导出一份 metadata 即可；未声明的字段会继续沿用祖先布局的配置。
+根布局里还可以用 title.default + title.template，让子页面只写短标题、全站自动带上后缀，例如：
+
+```ts
+// app/layout.tsx（节选）
+export const metadata: Metadata = {
+  title: {
+    default: "小满优选",
+    template: "%s | 小满优选",
+  },
+  description: "小满优选描述",
+  keywords: ["小满优选", "优选"],
+};
+```
+
+子页面写 title: '首页' 时，在支持模板合并的情况下，浏览器标题可呈现为 首页 | 小满优选（具体以当前 Next 版本行为为准）。
+
+```ts
+// app/home/page.tsx
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: '首页',
+  description: '首页描述',
+  keywords: ['首页', '小满优选'],
+};
+
+export default function Page() {
+  return <div>首页</div>;
+}
+```
+
+#### 进阶：用 generateMetadata 动态配置 TDK
+
+当标题、描述等需要依赖 动态路由参数、查询参数 或 接口 / 数据库 时，在对应 `page.tsx`（或 `layout.tsx`）中导出异步函数 `generateMetadata`，返回 `Metadata` 对象即可。它在服务端执行，可与页面数据使用同一套请求逻辑（注意缓存与性能，必要时配合 fetch 的缓存选项或数据层）。
+
+参数说明
+
+1. 第一个参数 `props`
+
+- params：动态路由段，例如 `app/posts/[id]/page.tsx` 中的 `id`。
+- searchParams：当前 URL 的查询参数，例如 `?id=123`。
+
+2. 第二个参数 `parent`  
+   类型为 `ResolvingMetadata`，表示父级布局已解析的 metadata。`await parent` 后可用于拼接标题、继承 `openGraph`、图片等。
+   下面示例假定路由为 `app/posts/[id]/page.tsx`，根据 `id` 请求文章并生成 TDK（接口仅为演示，可换成你的真实 API）：
+
+```tsx
+// app/posts/[id]/page.tsx
+import type { Metadata, ResolvingMetadata } from "next";
+
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  const { id } = await params;
+  const resolvedParent = await parent;
+
+  const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`);
+  if (!res.ok) {
+    return { title: "文章未找到" };
+  }
+  const data = await res.json();
+
+  return {
+    title: `${data.title} | ${resolvedParent.title?.absolute ?? "文章"}`,
+    description: data.body.slice(0, 150),
+    keywords: [data.title],
+  };
+}
+
+export default async function PostPage({ params }: Props) {
+  const { id } = await params;
+  return <div>文章 id：{id}</div>;
+}
+```
+
+### JSON-LD
+
+JSON-LD（JSON for Linked Data）是一种用于表达结构化数据的 JSON 格式。
+它能帮助搜索引擎和 AI 更准确理解页面内容（例如商品、文章、组织、人物、活动等实体），从而提升页面在检索系统中的可理解性。
+
+在 Next.js（App Router）里，推荐在 layout.tsx 或 page.tsx 中，直接输出一个原生 `<script type="application/ld+json">` 标签来注入 JSON-LD。
+
+#### JSON-LD 的基础结构
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": "https://example.com/people/zhangsan",
+  "name": "张三",
+  "age": 25
+}
+```
+
+字段说明：
+
+- @context：通常使用 https://schema.org
+- @type：实体类型（如 Product、Article、Organization）更多类型请查看文档https://schema.org/docs/full.html
+- @id：唯一标识符，通常是实体的URL
+- 其他字段：请根据文档填写例如Person https://schema.org/Person 你的网站是什么type你就把链接后面的值换成你对应的type就行了
+
+#### 在 Next.js 中添加 JSON-LD
+
+下面是一个页面级示例（以商品页为例）：
+
+```tsx
+// app/products/[id]/page.tsx
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const product = await getProduct(id);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    image: product.image,
+    description: product.description,
+  };
+
+  return (
+    <section>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
+      <h1>{product.name}</h1>
+    </section>
+  );
+}
+```
+
+**为什么要做 `.replace(/</g, '\\u003c')`**  
+`JSON.stringify` 本身不会自动处理所有潜在注入风险。
+当结构化数据里包含不可信字符串时，建议至少将 `<` 替换为 `\u003c`，降低 XSS 注入风险。
+
+#### TypeScript 类型约束（推荐）
+
+为避免字段名拼错、类型不匹配，建议使用 `schema-dts` 做类型提示：
+
+```ts
+import type { Product, WithContext } from "schema-dts";
+
+const jsonLd: WithContext<Product> = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  name: "Next.js Sticker",
+  image: "https://nextjs.org/imgs/sticker.png",
+  description: "Dynamic at the speed of static.",
+};
+```
+
+#### 常见问题
+
+1. 用 next/script 还是原生 `<script>`？  
+   JSON-LD 不是要执行的脚本代码，而是结构化数据声明。
+   在这个场景里，官方建议使用原生 `<script type="application/ld+json">`。
+
+2. 放在 layout.tsx 还是 page.tsx？  
+   放在 layout.tsx：适合站点级、栏目级的通用结构化数据  
+   放在 page.tsx：适合文章、商品详情这类强依赖当前页面数据的实体
+3. 如何验证配置是否有效？  
+   可使用以下工具进行校验：  
+   Google Rich Results Test：检查可用于 Google 富结果的结构化数据
+   Schema Markup Validator：通用 Schema.org 结构校验
+
+#### 实践建议
+
+- 使用与页面真实内容一致的字段，避免“标注内容”和“页面内容”不一致
+- 动态页面优先在服务端生成 JSON-LD，保证首屏 HTML 可被爬虫读取
+- 关键实体（文章、商品、组织）优先完善，再逐步扩展更多 schema 类型
+
+### Open Graph（OG）
+
+Open Graph 是 Facebook（现 Meta）提出的一套页面元数据协议，通过 `<meta property="og:*">` 描述标题、描述、封面图、类型等。当链接被分享到微信、Slack、Discord、LinkedIn 等平台时，抓取方会读取这些标签来生成卡片预览，因此 OG 与 SEO（点击率、品牌呈现）和 传播体验 都密切相关。
+
+在 App Router 中，Next.js 通过导出 `metadata` 或 `generateMetadata` 中的 `openGraph` 字段，自动生成对应的 `OG` 标签，无需手写整段 `<head>`。官方说明见 [Metadata API](https://nextjs.org/docs/app/api-reference/functions/generate-metadata) 与 [Optimizing Metadata](https://nextjs.org/docs/app/getting-started/metadata-and-og-images)。
+
+#### 实例：苹果官网的 OG 标签与分享效果
+
+下面这段是 [Apple 官网](https://www.apple.com/) 首页实际输出的部分 OG 元数据（与页面在浏览器「查看源代码」中可见的 `og:\*` 一致；`og:image` 上的查询串常用于缓存版本控制，可按需更新）：
+
+```html
+<meta
+  property="og:image"
+  content="https://www.apple.com/ac/structured-data/images/open_graph_logo.png?202604211141"
+/>
+<meta property="og:title" content="Apple" />
+<meta
+  property="og:description"
+  content="Discover the innovative world of Apple and shop everything iPhone, iPad, Apple Watch, Mac, and Apple TV, plus explore accessories, entertainment, and expert device support."
+/>
+<meta property="og:url" content="https://www.apple.com/" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:site_name" content="Apple" />
+<meta property="og:type" content="website" />
+```
+
+在微信里转发该链接时，客户端会按上述字段拼出链接卡片：左侧一般为 `og:image`（此处为白底灰苹果 Logo），右侧为 `og:title` 粗体标题，其下为 `og:description` 摘要（各客户端会按自己的规则截断并加省略号）。  
+同一组信息在 Next.js 里可写成 `Metadata['openGraph']`（图片用绝对 URL 时不必依赖 `metadataBase`）：
+
+```tsx
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  openGraph: {
+    title: "Apple",
+    description:
+      "Discover the innovative world of Apple and shop everything iPhone, iPad, Apple Watch, Mac, and Apple TV, plus explore accessories, entertainment, and expert device support.",
+    url: "https://www.apple.com/",
+    siteName: "Apple",
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: "https://www.apple.com/ac/structured-data/images/open_graph_logo.png?202604211141",
+      },
+    ],
+  },
+};
+```
+
+#### openGraph 能配置什么
+
+在 `Metadata` 对象里的 `openGraph` 还支持视频、音频、多图、文章发布时间等。常用字段归纳如下：
+
+| 配置项                  | 典型用途                                              |
+| ----------------------- | ----------------------------------------------------- |
+| `title` / `description` | 卡片标题与摘要（可与页面 TDK 一致或单独优化分享文案） |
+| `url`                   | 规范链接，建议与当前页可访问 URL 一致                 |
+| `siteName`              | 站点名称                                              |
+| `images`                | 预览图（可多图）；常配宽高与 `alt`                    |
+| `videos` / `audio`      | 富媒体预览（需绝对 `URL）`                            |
+| `locale`                | 语言区域，如 `en_US`                                  |
+| `type`                  | 资源类型，如 `website`；文章常用 `article`            |
+
+```tsx
+// app/layout.tsx 或任意 page.tsx / layout.tsx
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  openGraph: {
+    title: "Next.js",
+    description: "The React Framework for the Web",
+    url: "https://nextjs.org",
+    siteName: "Next.js",
+    images: [
+      {
+        url: "https://nextjs.org/og.png",
+        width: 800,
+        height: 600,
+      },
+      {
+        url: "https://nextjs.org/og-alt.png",
+        width: 1800,
+        height: 1600,
+        alt: "My custom alt",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+};
+```
+
+文章类页面可设置 `type: 'article'`，并配合 `publishedTime`、`authors` 等，框架会输出 `article:\*` 系列属性（详见 官方 [openGraph](https://nextjs.org/docs/app/api-reference/functions/generate-metadata#opengraph) 小节）。
+
+#### Open Graph 官网与 type 去哪查
+
+如果你想确认协议原文或查 og:type 的语义，优先看 Open Graph 官方站点：
+
+协议首页：`ogp.me`
+
+- type 说明与扩展类型入口：`ogp.me/#types`
+- 已定义的对象类型列表（如 `website`、`article`、`video.movie` 等）：`ogp.me/#structured`
+- 在 Next.js 项目里，openGraph.type 还受 Next 的 TypeScript 类型约束。你可以通过两种方式确认当前版本支持的值：
+
+查看 Next.js 文档中的 `openGraph` 字段示例与说明：[generateMetadata#opengraph](https://nextjs.org/docs/app/api-reference/functions/generate-metadata#opengraph)
+在编辑器里把鼠标悬停到 `Metadata['openGraph']['type']`（或跳转到 `next` 包类型定义）查看联合类型，以你项目安装的 Next 版本为准。
+
+#### `metadataBase` 与相对路径
+
+OG 图片等 URL 类字段 在多数场景下需要绝对地址。根布局中设置 `metadataBase` 后，当前段及子路由里的相对路径会与基址拼接，避免到处写死域名：
+
+```tsx
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://acme.com"),
+  openGraph: {
+    images: "/og-image.png",
+  },
+};
+```
+
+若某字段已是完整 `https://...`，则不再套用 `metadataBase`。未配置 `metadataBase` 却在 URL 类元数据里使用相对路径，构建可能报错，这一点以你当前 Next.js 版本文档为准。
+
+#### `动态路由：generateMetadata` 与父级 `images`
+
+详情页等需要按参数拉数据时，使用 `generateMetadata`。第二个参数 `parent` 可拿到父布局已解析的 metadata，便于在子页面追加 OG 图而不是整段覆盖，例如把当前商品图插到继承来的图片列表前面：
+
+```tsx
+import type { Metadata, ResolvingMetadata } from "next";
+
+type Props = { params: Promise<{ id: string }> };
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  const { id } = await params;
+  const product = await fetch(`https://api.example.com/products/${id}`).then(
+    (r) => r.json(),
+  );
+  const previousImages = (await parent).openGraph?.images || [];
+
+  return {
+    title: product.title,
+    openGraph: {
+      images: ["/some-specific-page-image.jpg", ...previousImages],
+    },
+  };
+}
+```
+
+同一数据请求在 `generateMetadata` 与页面 Server Component 之间会被 memoized，避免重复打接口（见官方 [generateMetadata](https://nextjs.org/docs/app/api-reference/functions/generate-metadata) 说明）。
+
+#### 基于文件的 OG 图（推荐场景）
+
+单独维护「导出里的图片 URL」和「仓库里的真实文件」容易不同步。对 OG 图而言，更省事的做法是使用 基于文件的 Metadata，例如在路由段放置 `opengraph-image.png` 或 `opengraph-image.tsx` 动态生成图，由框架生成正确 meta。详见 [opengraph-image](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/opengraph-image)。
+
+#### 与布局继承的关系（简要）
+
+子路由若导出了自己的 `openGraph` 对象，会与父级按官方规则做合并或覆盖；若子段完全不设置 `openGraph`，则继续沿用祖先布局的配置。具体嵌套行为以 [Metadata 字段与继承](https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadata-fields) 为准。
+
+#### 实践建议
+
+- 一图多用：分享图尺寸需符合各平台建议（常见如 1200×630 等），并保持主体在安全区内，避免裁切后信息丢失。品牌站也可用苹果这种方形 Logo 图，在部分客户端里会以缩略图形式出现。
+- 与 TDK 协调：`openGraph.title` / `openGraph.description` 可与 `metadata.title`、`metadata.description`相同，也可为分享单独写更「点击率友好」的短文案。
+- 验证：改完后用各平台提供的调试/预览工具（如部分平台提供的 URL 调试器）拉取一次，确认缓存更新后再对外发链接。
+
+更多字段与 HTML 对照表仍以 Next.js 官网 [openGraph](https://nextjs.org/docs/app/api-reference/functions/generate-metadata#opengraph) 为准。
+
+### web vitals
+
+Web Vitals 是 Google 推出的一套以用户为中心的网页性能指标体系，用来衡量真实用户在加载速度、交互响应、页面稳定性三个维度的体验表现，也是 SEO 评估的重要参考项。
+
+#### 核心三项（LCP、INP、CLS）
+
+##### LCP（Largest Contentful Paint，最大内容绘制时间）
+
+LCP 衡量的是视口内最大内容元素（通常是大图、视频封面或大段文本）完成渲染所需的时间，反映“主要内容何时可见”。
+
+- Good：`<= 2.5s`
+- Needs Improvement：`2.5s ~ 4.0s`
+- Poor：`> 4.0s`
+
+##### INP（Interaction to Next Paint，交互到下一次绘制）
+
+INP 衡量用户交互（点击、输入、键盘操作）到页面下一次可见更新之间的延迟，反映整体交互流畅度。
+
+- Good：<= 200ms
+- Needs Improvement：200ms ~ 500ms
+- Poor：> 500ms
+
+##### CLS（Cumulative Layout Shift，累积布局偏移）
+
+CLS 衡量页面在生命周期内发生的意外布局位移总量，反映视觉稳定性。比如图片未预留尺寸、异步内容插入导致页面“跳动”。
+
+- Good：<= 0.1
+- Needs Improvement：0.1 ~ 0.25
+- Poor：> 0.25
+
+#### 代码示例
+
+```bash
+npm install web-vitals
+```
+
+下面示例展示在 Next.js 客户端中订阅 Web Vitals 指标并输出到控制台（可替换为埋点上报逻辑）：
+
+```tsx
+"use client";
+
+import { useEffect } from "react";
+import { onCLS, onFCP, onINP, onLCP, type Metric } from "web-vitals";
+
+function reportWebVital(metric: Metric) {
+  // 生产环境中建议上报到日志系统或分析平台
+  console.log("[WebVitals]", metric.name, metric.value, metric.rating);
+}
+
+export default function HomePage() {
+  useEffect(() => {
+    onCLS(reportWebVital);
+    onFCP(reportWebVital);
+    onINP(reportWebVital);
+    onLCP(reportWebVital);
+  }, []);
+
+  return (
+    <section>
+      <button type="button">点击交互</button>
+      <div>你已经进入 Home 页面</div>
+    </section>
+  );
+}
+```
+
+示例输出：
+
+```json
+{ name: 'FCP', value: 1164, rating: 'good', delta: 1164, entries: [...] }
+{ name: 'INP', value: 78, rating: 'good', delta: 78, entries: [...] }
+{ name: 'CLS', value: 0, rating: 'good', delta: 0, entries: [...] }
+{ name: 'LCP', value: 1530, rating: 'good', delta: 1530, entries: [...] }
+```
+
+## ORM框架(Object-Relational Mapping)
+
+### 开始使用Prisma
+
+```bash
+npm i prisma -D
+```
+
+### 安装prisma客户端:
+
+安装prisma:
+
+```bash
+npm i prisma -D
+```
+
+安装prisma客户端:
+
+```bash
+npm install @prisma/client @prisma/adapter-pg pg dotenv
+```
+
+**注: prisma7版本需要独立安装适配器**
+
+例如postgresql需要安装@prisma/adapter-pg，mysql需要安装@prisma/adapter-mariadb。
+
+其他数据库请参考https://www.prisma.io/docs/getting-started/prisma-orm/quickstart/prisma-postgres
+
+在Next.js项目根目录执行以下命令，初始化prisma:
+
+```bash
+npx prisma init
+```
+
+执行完成之后他会自动生成prisma文件夹，并且生成`schema.prisma`文件，以及创建一个`env`文件和`prisma.config.ts`文件。  
+打开prisma/schema.prisma文件，添加以下内容：
+
+```ts
+generator client {
+  provider = "prisma-client" //使用什么客户端
+  output   = "../src/generated/prisma" //生成客户端代码的目录
+}
+
+datasource db {
+  provider = "postgresql" //连接什么数据库
+}
+
+model User {
+  id        String   @id @default(cuid()) //主键
+  name      String //用户名
+  email     String   @unique //邮箱
+  password  String //密码
+  createdAt DateTime @default(now()) //创建时间
+  updatedAt DateTime @updatedAt //更新时间
+  posts     Post[] //关联文章
+}
+
+model Post {
+  id        String   @id @default(cuid()) //主键
+  title     String //标题
+  content   String //内容
+  createdAt DateTime @default(now()) //创建时间
+  updatedAt DateTime @updatedAt //更新时间
+  authorId  String //作者ID
+  author    User     @relation(fields: [authorId], references: [id],onDelete: Cascade,onUpdate: Cascade) //一对多关联
+}
+```
+
+打开.env文件，修改数据库连接信息：
+
+```ts
+DATABASE_URL = "postgresql://postgres:123456@localhost:6666/test_db";
+```
+
+执行数据库迁移命令:
+
+```bash
+npx prisma migrate dev --name init
+```
+
+执行完成之后他会在`prisma/migrations`文件夹中生成一个`migration`文件，并且生成一个`sql`文件，然后自动执行`sql`文件，创建表结构。  
+接着执行生成客户端代码命令：
+
+```bash
+npx prisma generate
+#生成路径是 schema.prisma 文件中client output的目录
+```
+
+## 身份集成
+
+为什么选择Better Auth？官网地址https://better-auth.com/docs/adapters/mongo
+
+1. 开箱即用，我们不需要重复造轮子去编写一些基础的认证功能，只需要专注于业务逻辑
+2. 支持非常多的认证方式，例如：邮箱 OAuth JWT Session Cookie Token
+3. 支持很多第三方验证，例如：Apple Google Github FaceBook Twitter(X) TikTok WeChat Vercel，等等还有很多其他的，我只是列出一些常用的，你可以根据你的需求选择合适的认证方式。
+4. 支持的数据库有：Mysql PostgreSQL SQLite MSSQL MongoDB
+5. 支持的ORM框架有：Drizzle Prisma
+6. 支持的框架有：Next Astro React Nuxt Hono Electron Express Elysia Svelte Solid，等等还有很多其他的，我列出一些常见的，你可以根据你的需求选择合适的框架。
+
+### Next.js 集成
+
+1. 安装better-auth
+
+```bash
+npm install better-auth
+```
+
+2. 安装Primsa ORM框架(如果不懂Prisma请先学习ORM)
+
+```bash
+npm install prisma #安装Prisma ORM框架
+npm install @prisma/client @prisma/adapter-pg pg dotenv #安装prisma客户端我们使用的数据库是pgsql
+npx prisma init #初始化prisma
+```
+
+3. 配置环境变量(.env文件)在执行完成prisma init命令之后，他会自动生成一个.env文件。
+
+```ts
+BETTER_AUTH_SECRET="你的secret"#这个你可以自己写，但也可以使用openssl生成一个`openssl rand -base64 32`
+BETTER_AUTH_URL=http://localhost:3000 #你的项目地址
+DATABASE_URL="postgresql://postgres:123456@localhost:5432/auth" #这个是prisma自带的
+```
+
+4. 创建一个auth.ts
+   官方建议在src/lib/auth.ts文件中创建一个auth实例，并且导出这个实例。
+
+```ts
+import { betterAuth } from "better-auth";
+export const auth = betterAuth({
+  //...
+});
+```
+
+通过prisma生成客户端文件
+
+```bash
+npx prisma generate
+```
+
+执行完成之后他会在`src/generated/prisma`文件夹中生成一个`client.ts`文件，这个文件是prisma生成的客户端文件，我们只需要在`auth.ts`文件中引入这个文件即可。
+
+```ts
+import { betterAuth } from "better-auth"; //引入better-auth
+import { prismaAdapter } from "better-auth/adapters/prisma"; //引入prisma适配器
+import { PrismaClient } from "@/generated/prisma/client"; //引入prisma客户端
+import { PrismaPg } from "@prisma/adapter-pg"; //引入pgsql适配器
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL }); //连接数据库
+const prisma = new PrismaClient({ adapter }); //创建客户端
+export const auth = betterAuth({
+  database: prismaAdapter(prisma, {
+    provider: "postgresql", //指定数据库类型
+  }),
+  emailAndPassword: {
+    enabled: true, //开启邮箱密码认证
+  },
+});
+```
+
+5. 生成数据表
+   Better Auth 提供了一个命令行工具，可以自动生成数据表，我们只需要执行以下命令即可。
+
+```bash
+npx auth@latest generate
+```
+
+6. 执行数据库迁移 + 重新生成客户端文件
+
+```bash
+npx prisma migrate dev --name init
+npx prisma generate
+```
+
+7. 挂载处理程序
+   要处理 API 请求，需要在服务器上设置路由处理程序。在src/app目录下新建以下目录结构
+   `app/api/auth/[...all]/route.ts`
+8. 创建客户端实例配置
+   在lib目录下创建一个`auth-client.ts`文件，这个文件是客户端实例配置，我们只需要在文件中配置一些客户端的实例即可。
+
+```ts
+import { createAuthClient } from "better-auth/react";
+export const authClient = createAuthClient({
+  baseURL: "http://localhost:3000", //你的项目地址
+});
+export const { signIn, signUp, useSession } = authClient;
+```
+
+### 开始体验
+
+Better Auth 的集成确实比较麻烦，但是一旦集成成功，你就可以享受到更好的用户体验，我们就来体验一下他的基础功能。
+
+#### 邮箱密码登录
+
+前提：`auth.ts` 里已开启 `emailAndPassword.enabled: true`（见上文第 4 步），且 `auth-client.ts` 从同一个 `createAuthClient` 实例解构出 `signIn`、`signUp`（`baseURL `与 `BETTER_AUTH_URL` 一致），例如：
+
+```ts
+import { createAuthClient } from "better-auth/react";
+
+export const authClient = createAuthClient({
+  baseURL: "http://localhost:3000",
+});
+
+export const { signIn, signUp, useSession } = authClient;
+```
+
+在任意客户端页面（例如 `app/page.tsx`）顶部加上 `'use client'`，用 `useState` 保存表单字段，注册调用 `signUp.email`，登录调用 `signIn.email`。二者都返回 `{ data, error }`，按需处理成功或错误信息。
+
+```tsx
+"use client";
+import { signIn, signUp } from "@/lib/auth-client";
+import { useState } from "react";
+
+export default function Home() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+
+  const handleSignUp = async () => {
+    const { data, error } = await signUp.email({
+      email,
+      password,
+      name,
+    });
+    if (error) {
+      console.log(error.message);
+    } else {
+      console.log(data);
+    }
+  };
+
+  const [signEmail, setSignEmail] = useState("");
+  const [signPassword, setSignPassword] = useState("");
+
+  const handleSignIn = async () => {
+    const { data, error } = await signIn.email({
+      email: signEmail,
+      password: signPassword,
+    });
+    if (error) {
+      console.log(error.message);
+    } else {
+      console.log(data.user);
+    }
+  };
+
+  return (
+    <div>
+      <div>
+        <h1>注册</h1>
+        <input
+          type="text"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button type="button" onClick={() => handleSignUp()}>
+          Sign Up
+        </button>
+      </div>
+      <hr />
+      <div>
+        <h1>登录</h1>
+        <input
+          value={signEmail}
+          onChange={(e) => setSignEmail(e.target.value)}
+          type="text"
+          placeholder="Email"
+        />
+        <input
+          value={signPassword}
+          onChange={(e) => setSignPassword(e.target.value)}
+          type="password"
+          placeholder="Password"
+        />
+        <button type="button" onClick={() => handleSignIn()}>
+          Sign In
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+#### GitHub 登录
+
+1. 在 GitHub → Settings → Developer settings 中新建 OAuth App，Authorization callback URL 填：http://localhost:3000/api/auth/callback/github（生产环境改为你的域名下的同路径）。
+2. 把 `Client ID`、`Client secrets` 写入 `.env`，并在 auth.ts 的 `betterAuth({ ... })` 中增加`socialProviders`：
+
+```ts
+socialProviders: {
+  github: {
+    clientId: process.env.GITHUB_CLIENT_ID as string,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+  },
+},
+```
+
+```
+GITHUB_CLIENT_ID="你的 Client ID"
+GITHUB_CLIENT_SECRET="你的 Client Secret"
+```
+
+3. 客户端使用 `signIn.social`，`provider` 为 'github'。成功时通常会重定向到 GitHub 授权页，授权完成后回到站点；若返回 error，打印 error.message 排查配置或回调地址。
+
+```tsx
+const handleGithubLogin = async () => {
+  const { data, error } = await signIn.social({
+    provider: "github",
+  });
+  if (error) {
+    console.log(error.message);
+  } else {
+    console.log(data);
+  }
+};
+
+// JSX 中
+<button type="button" onClick={() => handleGithubLogin()}>
+  GitHub 登录
+</button>;
+```
+
+可将该按钮与上文邮箱注册/登录放在同一页面，完整示例只需在 return 中增加 `<hr />` 与上述按钮即可。
+
+## Vercel 部署
+
+### 为什么选择 Vercel？
+
+1. **与 Next.js 同源**：Vercel 与 Next.js 由同一团队维护，新版本特性、运行时行为与文档往往最先在 Vercel 上得到验证，踩坑相对较少。
+2. **边缘网络**：部署在全球边缘节点，静态资源与部分动态能力可就近响应，有利于降低首屏与 API 延迟（具体能力随套餐与路由配置而异）。
+3. **HTTPS 与域名**：默认提供 **HTTPS**（自动证书），并支持绑定自有域名；也提供 `*.vercel.app` 子域名用于快速上线与测试。
+4. **Git 工作流**：连接 Git 仓库后，推送到主分支可自动构建与生产部署；每个 Pull Request 可生成**独立预览地址**，方便 Code Review 与联调。
+5. **与 Next.js 能力对齐**：对 App Router、Server Actions、ISR、Middleware、Edge Runtime 等常见能力有较好支持，控制台可管理环境变量、重定向与部分运行时设置。
+
+> 注意事项：免费套餐流量限制: 每月 100GB，其他付费套餐自行选择。
+
+> 注意事项2：对国内网络不友好，如果需要国内访问，需要使用代理。
+
+### 部署流程
+
+1. 打开 vercel 官网: [Vercel](https://vercel.com/login)
+2. 登录账号（邮箱，Google，Github 等）
+3. 安装依赖
+
+```bash
+npm i vercel -g
+```
+
+4. 打开项目根目录，执行以下命令：
+
+```bash
+vercel link
+```
+
+5. 创建数据库（Vercel Storage → PostgreSQL）
+
+6. 配置环境变量
+
+在项目中执行以下命令：
+
+```bash
+vercel env pull .env.development.local
+```
+
+添加三个环境变量：
+
+```
+VERCEL_OIDC_TOKEN="vercel自带的不需要管"
+PRISMA_DATABASE_URL="postgres://xxxxxx"
+POSTGRES_URL="postgres://xxxxxx"
+PRISMA_DATABASE_URL="postgres://xxxxxx"
+```
+
+接着把本地的 `.env` 文件里面的 `DATABASE_URL` 修改：
+
+```
+DATABASE_URL="postgres://xxxxxx"
+```
+
+接着执行命令：
+
+```bash
+npx prisma migrate dev --name init
+npx prisma generate
+```
+
+输出以下内容表示成功：
+
+```
+PS D:\project\next-auth-1> npx prisma migrate dev --name init
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+Datasource "db": PostgreSQL database "postgres", schema "public" at "pooled.db.prisma.io:5432"
+
+Applying migration `20260512044029_init`
+
+The following migration(s) have been created and applied from new schema changes:
+
+prisma\migrations/
+  └─ 20260512044029_init/
+    └─ migration.sql
+
+Your database is now in sync with your schema.
+
+PS D:\project\next-auth-1> npx prisma generate
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+
+✔ Generated Prisma Client (7.8.0) to .\src\generated\prisma in 60ms
+```
+
+7. 执行部署命令
+
+```bash
+vercel deploy
+```
+
+输出以下内容表示成功：
+
+```
+PS D:\project\next-auth-1> vercel deploy
+🔍  Inspect: https://vercel.com/zXXXXXXXXX [3s]
+✅  Production: https://nexXXXXXXXXXXXX [41s]
+🔗  Aliased: https://next-auth-1-eta.vercel.app [41s]
+📝  Deployed to production. Run `vercel --prod` to overwrite later (https://vercel.link/2F).
+💡  To change the domain or build command, go to https://vercel.com/zXXXXXXX/settings
 ```

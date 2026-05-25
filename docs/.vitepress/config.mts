@@ -97,7 +97,7 @@ export default defineConfig({
     ],
     footer: {
       message: "努力成为全干型人才",
-      copyright: "Copyright © 2023-present zuishuaicc",
+      copyright: "Copyright © 2023-present 七槿年",
     },
   },
   markdown: {
