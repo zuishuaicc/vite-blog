@@ -1,8 +1,9 @@
 ---
 outline: deep
 ---
-
-##  mac安装navicat,无法通过mac校验
+# 数据库工具
+## Navicat
+###  mac安装navicat,无法通过mac校验
 先打开  `系统偏好设置`-> `安全与隐私`-> `通用`  选项卡，检查是否已经启用了 `任何来源` 选项。  
 如果没有启用，先点击左下角的小黄锁图标解锁，然后选中`任何来源`。
 
@@ -43,7 +44,10 @@ sudo xattr -rd com.apple.quarantine
 注意 quarantine 后面必须有个空格
 :::
 
-
-
-
 好了再看一下是不是可以打开APP了！
+### 个人开发者可以免费使用Navicat Lite版本
+## DBeaver
+### 转储恢复
+使用数据库工具如Dbeaver进行MySQL 转储恢复，本地需要装了 mysql-client，
+1. Mac可以使用brew安装；
+2. windows通过 打开官网下载页：https://dev.mysql.com/downloads/installer/

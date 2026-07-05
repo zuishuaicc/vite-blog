@@ -126,7 +126,7 @@ docker tag 旧镜像名字：旧版本号 新镜像名字：新版本号 ====更
 Mysql 镜像启动：docker run --name cc-mysql -p 33060:3306 -e MYSQL_ROOT_PASSWORD=123456 -d mysql
 Redis 镜像启动：docker run --name cc-redis -p 6379:6379 -d redis --requirepass "123456"
 ```
-
+**注意：docker desktop是商业收费的，使用需谨慎，linux上可以使用社区版docker-ce代替。docker-ce安装: https://help.aliyun.com/zh/ecs/user-guide/install-and-use-docker#ba0b2951bb2ay**
 ## mysql 镜像启动
 
 ```bash

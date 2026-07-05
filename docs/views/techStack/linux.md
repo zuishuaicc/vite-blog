@@ -190,3 +190,9 @@ journalctl -exu dnf-makecache.service
 ```bash
 atop -r /var/log/atop/atop_YYYYMMDD
 ```
+## windows上使用linux命令
+安装coreutils,可以支持部分简单的linux命令
+```bash
+winget install Microsoft.Coreutils
+```
+[Microsoft.Coreutils文档](https://learn.microsoft.com/en-us/windows/core-utils/overview#install)
