@@ -220,6 +220,15 @@ export const sidebar = [
               },
             ],
           },
+          {
+            text: "📁golang",
+            items: [
+              {
+                text: getIcon() + "go基础语法",
+                link: "/views/backend/golang/golang-base",
+              },
+            ],
+          },
         ],
       },
     ],
