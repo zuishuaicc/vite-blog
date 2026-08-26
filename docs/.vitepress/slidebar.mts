@@ -227,6 +227,10 @@ export const sidebar = [
                 text: getIcon() + "go基础语法",
                 link: "/views/backend/golang/golang-base",
               },
+              {
+                text: getIcon() + "Gin框架",
+                link: "/views/backend/golang/golang-gin",
+              },
             ],
           },
         ],
