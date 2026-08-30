@@ -110,12 +110,12 @@ import "fmt"
 
 func main() {
 	//关键字 变量名 类型 = 值
-	var name string = "小满"
+	var name string = "zuishuaicc"
 	fmt.Println(name)
 }
 ```
 
-以上便是变量声明的规则，我们声明了一个字符串类型的变量 `name`，并赋值为 "小满"。什么时候该用字符串呢？你在网页中所看到的大部分文本和文字都是字符串，比如："你好，世界！"、"Hello, World!"、"こんにちは、世界！"等。所以，当你需要存储文本、文字或任何字符序列时，就可以使用字符串类型。
+以上便是变量声明的规则，我们声明了一个字符串类型的变量 `name`，并赋值为 "zuishuaicc"。什么时候该用字符串呢？你在网页中所看到的大部分文本和文字都是字符串，比如："你好，世界！"、"Hello, World!"、"こんにちは、世界！"等。所以，当你需要存储文本、文字或任何字符序列时，就可以使用字符串类型。
 
 ### 3.1 类型推断
 
@@ -128,9 +128,9 @@ import "fmt"
 
 func main() {
 	//关键字 变量名 类型 = 值
-	var name = "小满"
+	var name = "zuishuaicc"
 	var age = 18 //int 表示整数类型
-	fmt.Println(name, age) //输出：小满 18
+	fmt.Println(name, age) //输出：zuishuaicc 18
 }
 ```
 
@@ -161,7 +161,7 @@ import "fmt"
 
 func main() {
 	//变量名 := 值
-	name := "小满"
+	name := "zuishuaicc"
 	fmt.Println(name)
 }
 ```
@@ -179,12 +179,12 @@ import "fmt"
 
 func main() {
 	//多个变量用逗号隔开
-	age, name := 18, "小满"
-	fmt.Println(age, name) //输出：18 小满
+	age, name := 18, "zuishuaicc"
+	fmt.Println(age, name) //输出：18 zuishuaicc
 }
 ```
 
-多个变量声明需要用 `,` 隔开，并且赋值的时候也是根据顺序赋值。例如 `age = 18`，`name = "小满"`。
+多个变量声明需要用 `,` 隔开，并且赋值的时候也是根据顺序赋值。例如 `age = 18`，`name = "zuishuaicc"`。
 
 ## 4. Go 数据类型
 
@@ -360,10 +360,10 @@ type Person struct {
 func main() {
 	// 创建结构体实例
 	p := Person{
-		Name: "小满",
+		Name: "zuishuaicc",
 		Age:  18,
 	}
-	fmt.Println(p.Name, p.Age) // 输出：小满 18
+	fmt.Println(p.Name, p.Age) // 输出：zuishuaicc 18
 
 	// 访问和修改字段
 	p.Age = 20
