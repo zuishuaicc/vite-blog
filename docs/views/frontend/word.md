@@ -292,3 +292,6 @@ myDocxPreviewer.preview('https://501351981.github.io/vue-office/examples/dist/st
 https://501351981.github.io/vue-office/examples/docs/guide/js-preview.html  
 word预览演示demo  
 https://501351981.github.io/vue-office/examples/dist/#/docx
+## open-file-viewer
+新出高度兼容xls，xls等格式库  
+https://github.com/xushanpei/open-file-viewer

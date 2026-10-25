@@ -2410,3 +2410,2084 @@ func main() {
 | 明显的编程错误、不可继续的状态 | 可以 `panic` |
 | 服务入口想避免整个进程挂掉 | 边界处 `defer` + `recover`，打日志后返回错误响应 |
 入门阶段优先练好 `if err != nil`；`panic` / `recover` 留给真正的异常路径，不要拿来代替普通业务校验。
+
+## 13. Go 值传递与引用类型
+
+调用函数时，实参怎么传给形参？改形参会不会影响外面的变量？
+
+Go 的答案比「值传递 / 引用传递」二分法更精确：**Go 里永远是值传递**——传参时会复制一份。但有些类型的「那一份」只是描述符（header），底层数据仍然共享，所以看起来就像「引用传递」。
+
+### 13.1 先记住一句话
+
+> **Go 只有值传递，没有 C++ 那种引用传递（`&`）。**
+> 区别不在于语法，而在于**被复制的到底是什么**：复制整个 `int`，还是复制一个指向底层数据的「头」。
+
+| 分类 | 常见类型 | 传参时复制什么 | 函数内改形参，外面会变吗 |
+| --- | --- | --- | --- |
+| 值类型 | `int`、`bool`、`float`、`array`、`struct`（普通字段） | 完整拷贝一份数据 | **不会**（改的是副本） |
+| 引用类型 | `slice`、`map`、`func`、`interface` | 复制 header，共享底层 | **会**（改的是同一份底层数据） |
+| 指针 | `*T` | 复制指针值（地址） | **会**（通过地址改原数据） |
+
+下面分开看。
+
+### 13.2 值传递
+
+值传递时，函数拿到的是实参的**完整副本**。形参和实参是两个变量，互不影响。
+
+```go
+package main
+
+import "fmt"
+
+func change(x int) {
+	x = 20 // 改的是副本
+}
+
+func main() {
+	x := 10
+	change(x)
+	fmt.Println(x) // 10，外面的 x 没变
+}
+```
+
+数组也是值类型——传参会复制**整个数组**，开销比切片大，日常更常用切片：
+
+```go
+package main
+
+import "fmt"
+
+func change(arr [3]int) {
+	arr[0] = 100
+}
+
+func main() {
+	arr := [3]int{1, 2, 3}
+	change(arr)
+	fmt.Println(arr) // [1 2 3]，原数组没变
+}
+```
+
+### 13.3 引用类型有哪些
+
+Go 没有官方术语「引用类型」，但社区通常把下面几类归为一组——它们的变量里藏着**指向底层数据的指针**：
+
+| 类型 | 说明 |
+| --- | --- |
+| `slice` | 切片，可变长序列 |
+| `map` | 映射，键值对 |
+| `func` | 函数值，指向同一段代码 |
+| `interface` | 接口值，内部含类型与数据指针 |
+| `chan` | 通道，用于 goroutine 通信（**本节仅了解名字，详细用法见后续章节**） |
+
+下面用 `slice` 和 `map` 举例（入门阶段重点掌握这两个）；`func`、`interface` 会在函数、接口相关章节深入，这里知道「也属于引用类型」即可。
+
+#### 13.3.1 切片 slice
+
+传参时复制的是 slice header（指针、长度、容量），**底层数组共享**。所以在函数里改元素，外面看得见：
+
+```go
+package main
+
+import "fmt"
+
+func change(s []string) {
+	s[0] = "猫来"
+}
+
+func main() {
+	s := []string{"牛来", "羊来", "码来"}
+	change(s)
+	fmt.Println(s) // [猫来 羊来 码来]
+}
+```
+
+用 `append` 追加元素时，只要**没触发扩容**（未超过 `cap`），同样共享底层数组：
+
+```go
+package main
+
+import "fmt"
+
+func appendOne(s []int) {
+	s = append(s, 100) // 在共享的底层数组上追加
+}
+
+func main() {
+	s := make([]int, 0, 4) // len=0, cap=4
+	appendOne(s)
+	fmt.Println(s, len(s)) // [] 0 —— 注意：形参 s 的 len 变了，但 main 里的 s 仍是原来的 header
+}
+```
+
+上面这个例子要仔细看：`appendOne` 里 `s` 的 `len` 变了，但 `main` 里的 `s` 还是原来的 header（`len` 仍为 0）。
+
+**改已有下标的元素**会生效；**`append` 可能只改形参自己的 header**，外面不一定变长。若 `append` 触发扩容、分配了新数组，则完全与外面无关。
+
+```go
+package main
+
+import "fmt"
+
+func appendMany(s []int) {
+	s = append(s, 1, 2, 3) // cap 不够时会新分配数组
+}
+
+func main() {
+	s := make([]int, 0, 1)
+	appendMany(s)
+	fmt.Println(s, len(s)) // [] 0 —— 扩容后外面完全不受影响
+}
+```
+
+要点：**改 `s[i]` 共享；`append` 是否影响外面，要看有没有扩容、以及是否把新 slice 返回给调用方。**
+
+#### 13.3.2 映射 map
+
+`map` 传参后，内外指向同一张哈希表。改值、删键、增键，外面都看得见：
+
+```go
+package main
+
+import "fmt"
+
+func change(m map[string]int) {
+	m["语文"] = 800
+}
+
+func main() {
+	m := map[string]int{
+		"语文": 100,
+		"数学": 99,
+		"英语": 98,
+	}
+	change(m)
+	fmt.Println(m) // map[语文:800 数学:99 英语:98]
+}
+```
+
+调用 `delete` 等 API，同样共享底层：
+
+```go
+package main
+
+import "fmt"
+
+func change(m map[string]int) {
+	m["语文"] = 800
+	delete(m, "数学")
+}
+
+func main() {
+	m := map[string]int{
+		"语文": 100,
+		"数学": 99,
+		"英语": 98,
+	}
+	change(m)
+	fmt.Println(m) // map[语文:800 英语:98]
+}
+```
+
+#### 13.3.3 通道 chan（了解即可）
+
+`chan` 和 `slice`、`map` 一样，传参后内外指向同一个通道。
+
+通道用于 goroutine 之间收发数据，用法较多，见后面「Go 通道」一章。这里只要记住：**它也是引用类型之一**。
+
+### 13.4 结构体：值传递 vs 指针传递
+
+结构体本身是**值类型**。传 `Person` 会复制整个结构体，函数里改字段不影响外面：
+
+```go
+package main
+
+import "fmt"
+
+type Person struct {
+	Name  string
+	Age   int
+	Email string
+}
+
+func change(person Person) {
+	person.Name = "张三"
+	person.Age = 91
+	person.Email = "zhangsan@qq.com"
+}
+
+func main() {
+	person := Person{
+		Name:  "zuishuaicc",
+		Age:   25,
+		Email: "zuishuaicc@qq.com",
+	}
+	change(person)
+	fmt.Println(person) // {zuishuaicc 25 zuishuaicc@qq.com}，原结构体未变
+}
+```
+
+若希望函数内修改能反映到外面，传**指针** `*Person`：
+
+```go
+package main
+
+import "fmt"
+
+type Person struct {
+	Name  string
+	Age   int
+	Email string
+}
+
+func change(person *Person) {
+	person.Name = "张三" // 语法糖，等价于 (*person).Name
+	person.Age = 91
+	person.Email = "zhangsan@qq.com"
+}
+
+func main() {
+	person := Person{
+		Name:  "zuishuaicc",
+		Age:   25,
+		Email: "zuishuaicc@qq.com",
+	}
+	change(&person)
+	fmt.Println(person) // {张三 91 zhangsan@qq.com}
+}
+```
+
+补充说明：
+
+- `*Person` 是**指针类型**，不是「引用类型」表格里的那一类；传指针时复制的是**地址**，通过地址仍能改到原结构体。
+
+- 结构体里某字段写成 `*string`，表示该字段是指针，和「把整个人当成 `*Person` 传递」是不同层面的概念。入门阶段优先掌握 **`Person` 与 `*Person` 的区别**即可。
+
+### 13.5 怎么选
+
+| 场景 | 建议 |
+| --- | --- |
+| 基本类型、小结构体，函数只读不改 | 直接传值 |
+| 需要在函数里改调用方的结构体 | 传 `*Struct` |
+| 一组可变长数据 | 用 `slice`，注意 `append` 与共享的规则 |
+| 按键查找、统计 | 用 `map` |
+| 不确定要不要改外面 | 先想清楚「要不要共享」；要共享就指针或引用类型，不要共享就传值或返回新值 |
+
+## 14. Go 协程
+
+普通函数按顺序执行：前面的不结束，后面的不会开始。
+
+协程（goroutine）让你可以**同时跑多段逻辑**——比如一边查订单、一边发短信、一边写日志，彼此不互相堵着。
+
+Go 的协程由运行时调度，比操作系统线程更轻。入门阶段先记住三件事：
+
+1. 用 `go` 启动协程。
+
+2. `main` 结束，整个程序就结束，其他协程也会被直接掐掉。
+
+3. 多个协程要「等它们都做完」，常用 `sync.WaitGroup`。
+
+> 协程之间怎么**传数据**，主要靠 `channel`。`channel` 内容较多，**后面「Go 通道」一章单独讲**；本章只解决「怎么开」和「怎么等」。
+
+### 14.1 创建协程
+
+在函数调用前加 `go`，就会在新的协程里执行，**不会阻塞当前代码**：
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func say(msg string) {
+	fmt.Println(msg)
+}
+
+func main() {
+	go say("你好，协程")
+	fmt.Println("你好，main")
+
+	// 先凑合等一下，否则 main 太快结束，协程可能还没打印
+	time.Sleep(time.Millisecond * 100)
+}
+```
+
+输出顺序不一定固定，常见类似：
+
+```
+你好，main
+你好，协程
+```
+
+也可以直接 `go` 一个匿名函数：
+
+```go
+go func() {
+	fmt.Println("匿名协程")
+}()
+```
+
+### 14.2 坑：main 结束，协程也没了
+
+下面这段**常常什么都打印不出来**（或偶尔能看到一行）：
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	go func() {
+		fmt.Println("我可能来不及打印")
+	}()
+	// main 立刻返回，程序退出
+}
+```
+
+原因：`go` 只是启动，不保证立刻跑完。`main` 一结束，进程就退出，其他协程直接被终止。
+
+#### 14.2.1 为什么不能靠 Sleep 硬等
+
+多个协程时，每个任务耗时往往**不一样、也不好猜**。你在 `main` 里写 `time.Sleep(xxx)`，时间是自己拍的：
+
+- 睡短了：有的协程还没做完，程序就退出了，结果丢了。
+
+- 睡长了：任务早做完了，还干等着，浪费时间。
+
+所以正式写法不用「自己估延时」，而是用标准库 **`sync`** 包里的 **`WaitGroup`**：谁做完谁报到，全部报到再往下走。
+
+### 14.3 用 WaitGroup 等待
+
+`sync.WaitGroup` 像一个计数器：
+
+| 方法 | 作用 |
+| --- | --- |
+| `Add(n)` | 计数器加 `n`（准备启动几个任务就加几） |
+| `Done()` | 计数器减 `1`（一个任务结束就调一次） |
+| `Wait()` | 卡住，直到计数器变为 `0` |
+
+约定：每个协程结束时调用 `Done()`，通常写成 `defer wg.Done()`，避免漏调。
+
+#### 14.3.1 例子：并发处理多个订单
+
+模拟给 3 个订单分别「发货通知」。每个通知耗时不同——如果用 `Sleep` 等，你根本不知道该睡多久；用 `WaitGroup` 就不需要猜。
+
+先看**错误示范**（靠猜延时）：
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func notify(orderID string, cost time.Duration) {
+	time.Sleep(cost) // 这里的 Sleep 只是「模拟业务耗时」，不是用来等协程
+	fmt.Println("已通知订单:", orderID)
+}
+
+func main() {
+	go notify("A1001", 200*time.Millisecond)
+	go notify("A1002", 100*time.Millisecond)
+	go notify("A1003", 150*time.Millisecond)
+
+	// 自己拍一个 120ms：A1002 能出来，A1001 / A1003 可能来不及
+	time.Sleep(120 * time.Millisecond)
+	fmt.Println("全部通知完成？——不一定")
+}
+```
+
+再看**正确写法**（`sync.WaitGroup`）：
+
+`wg` 写在 `main` 里，外面的 `notify` **本来读不到**这个变量——这和普通局部变量一样。所以要把地址 **`&wg` 当参数传进去**，函数签名写成 `wg *sync.WaitGroup`。
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+// 第三个参数接收 WaitGroup 的指针，否则外面读不到 main 里的 wg
+func notify(orderID string, cost time.Duration, wg *sync.WaitGroup) {
+	defer wg.Done() // 这个协程结束时，计数器 -1
+
+	time.Sleep(cost) // 仅模拟「发短信 / 调接口」耗时，与「等不等协程」无关
+	fmt.Println("已通知订单:", orderID)
+}
+
+func main() {
+	var wg sync.WaitGroup // 定义在 main 里：只有 main 和「被传进去的函数」能用它
+
+	orders := []struct {
+		id   string
+		cost time.Duration
+	}{
+		{"A1001", 200 * time.Millisecond},
+		{"A1002", 100 * time.Millisecond},
+		{"A1003", 150 * time.Millisecond},
+	}
+
+	wg.Add(len(orders)) // 告诉 WaitGroup：一共要等 3 个
+	for _, o := range orders {
+		go notify(o.id, o.cost, &wg) // 传地址，不是传副本
+	}
+
+	wg.Wait() // 不猜时间：三个 Done 都调用完才继续
+	fmt.Println("全部通知完成")
+}
+```
+
+如果嫌传参麻烦，也可以把逻辑写在 `main` 里的匿名函数中，直接闭包用到 `wg`（效果一样）：
+
+```go
+wg.Add(1)
+go func(id string, cost time.Duration) {
+	defer wg.Done()
+	time.Sleep(cost)
+	fmt.Println("已通知订单:", id)
+}(o.id, o.cost)
+```
+
+两种写法二选一即可：**独立函数 → 必须传 `*sync.WaitGroup`；匿名函数 → 可直接用外层的 `wg`。**
+
+输出类似（顺序可能变）：
+
+```
+已通知订单: A1002
+已通知订单: A1003
+已通知订单: A1001
+全部通知完成
+```
+
+对比记住：
+
+|  | `time.Sleep` 硬等 | `sync.WaitGroup` |
+| --- | --- | --- |
+| 依据 | 自己定的毫秒数，不准 | 每个协程调用 `Done()` 报到 |
+| 任务变慢时 | 容易提前退出、丢结果 | 自动多等一会儿 |
+| 任务变快时 | 白白多睡 | 做完立刻往下走 |
+| 适用 | 演示「协程能跑起来」可以凑合 | **多协程正式等待** |
+
+注意三点：
+
+1. `wg` 在 `main` 里时，外层命名函数**读不到**，必须加参数 `wg *sync.WaitGroup`，调用时传 `&wg`。
+
+2. 一定要传**指针**。若写成 `wg sync.WaitGroup`（值传递），协程里 `Done` 的是副本，`main` 里的 `Wait` 永远等不到。
+
+3. `Add` 在启动协程**之前**调用；`Done` 在协程内部调用。
+
+#### 14.3.2 例子：并发算总分
+
+多个学生各有一科成绩，分别在协程里累加到总分（这里用局部变量返回思路，先避免多协程同时写同一个变量）：
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+func sumScores(name string, scores []int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	total := 0
+	for _, s := range scores {
+		total += s
+	}
+	fmt.Printf("%s 总分: %d\n", name, total)
+}
+
+func main() {
+	var wg sync.WaitGroup
+
+	students := map[string][]int{
+		"zuishuaicc": {90, 85, 88},
+		"张三": {70, 92, 80},
+		"李四": {95, 91, 89},
+	}
+
+	wg.Add(len(students))
+	for name, scores := range students {
+		// 把循环变量拷一份再传进协程，避免闭包踩坑
+		n, s := name, scores
+		go sumScores(n, s, &wg)
+	}
+
+	wg.Wait()
+	fmt.Println("统计结束")
+}
+```
+
+> 循环里 `go` 时，务必把 `name`、`scores` **拷到新变量**再传入。否则多个协程可能都用到「最后一次循环」的值（Go 1.22 之前尤其常见）。习惯上写成 `n, s := name, scores` 最稳妥。
+
+### 14.4 闭包参数再强调一次
+
+错误示范（容易踩坑）：
+
+```go
+for _, name := range names {
+	go func() {
+		fmt.Println(name) // 可能全是最后一个 name
+	}()
+}
+```
+
+正确写法：把值作为参数传进去：
+
+```go
+for _, name := range names {
+	go func(n string) {
+		fmt.Println(n)
+	}(name)
+}
+```
+
+### 14.5 怎么选（入门版）
+
+| 场景 | 建议 |
+| --- | --- |
+| 只是顺序执行业务 | 普通函数调用即可，不必上协程 |
+| 多个互不依赖的任务要同时跑 | `go` + `sync.WaitGroup` |
+| 想「等全部完成再继续」 | 用 `wg.Wait()`，**不要**在 `main` 里猜一个 `Sleep` |
+| `Sleep` 可以用在哪 | 模拟业务耗时（发短信、调接口）；**不**用来等协程结束 |
+| 协程之间要传结果、收发消息 | 用 `channel`（见「Go 通道」一章） |
+| 多个协程同时改同一块数据（如同一个 `map`） | 先别这么做；需要时用锁或 `channel` 串行化 |
+
+入门阶段先练熟：**启动 → 别让 main 提前走 → 用 `sync.WaitGroup` 等齐（别靠猜延时）**。共享数据的安全写法放到后续章节。
+
+## 15. Go 通道
+
+上一章讲了怎么用 `go` 启动协程、用 `WaitGroup` 等待。
+
+协程之间要**传数据**，Go 的推荐方式是 **channel（通道）**：一边往里送，一边从里取，比多协程同时改同一个变量更安全、更好懂。
+
+入门先记住四件事：
+
+1. 用 `make(chan T)` 创建通道，`T` 是收发的数据类型。
+
+2. `ch <- v` 发送，`v := <-ch` 接收。
+
+3. **无缓冲**和**有缓冲**行为不一样，卡不卡在这一步。
+
+4. 多个通道同时等，用 `select`。
+
+### 15.1 创建与收发
+
+```go
+ch := make(chan int) // 无缓冲 int 通道
+ch <- 1              // 发送 1
+x := <-ch            // 接收到 x
+```
+
+也可以只声明发送或接收方向（函数参数里常见）：
+
+```go
+func producer(out chan<- int) { // 只能发送
+	out <- 1
+}
+
+func consumer(in <-chan int) { // 只能接收
+	fmt.Println(<-in)
+}
+```
+
+### 15.2 无缓冲通道
+
+`make(chan T)` 不写容量，就是**无缓冲**：
+
+- 发送方 `ch <- v` 会**卡住**，直到有人来接收。
+
+- 接收方 `<-ch` 也会**卡住**，直到有人来发送。
+
+两边必须「对上」才能继续——像当面递东西：你递、对方接，动作同时完成。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan string)
+
+	go func() {
+		ch <- "订单已支付" // 没人接时，这里会一直等
+	}()
+
+	msg := <-ch // main 在这里接住
+	fmt.Println(msg)
+}
+```
+
+输出：
+
+```
+订单已支付
+```
+
+注意：如果**只有发送、永远没有接收**（或反过来），程序会**死锁**，运行时报 `fatal error: all goroutines are asleep - deadlock!`。
+
+#### 15.2.1 例子：协程算完，通过通道把结果交回 main
+
+```go
+package main
+
+import "fmt"
+
+func sum(nums []int, ch chan int) {
+	total := 0
+	for _, n := range nums {
+		total += n
+	}
+	ch <- total // 把结果送出去
+}
+
+func main() {
+	ch := make(chan int)
+	go sum([]int{1, 2, 3, 4}, ch)
+
+	result := <-ch // 等协程送来结果
+	fmt.Println("总和:", result)
+}
+```
+
+无缓冲通道本身就能「等对方」：**接收会阻塞到有发送**，所以这里不必再写 `WaitGroup`。
+
+### 15.3 有缓冲通道
+
+`make(chan T, n)` 的 `n` 是缓冲区容量：
+
+- 缓冲区**没满**时，发送可以立刻成功，不必等接收方。
+
+- 缓冲区**空**时，接收会卡住，等有人发送。
+
+- 缓冲区**满了**再发，才会卡住等接收腾出空位。
+
+像信箱：最多放 `n` 封信；没满就能投，空了再取就得等。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan int, 2) // 容量 2
+
+	ch <- 10 // 不阻塞
+	ch <- 20 // 不阻塞
+	// ch <- 30 // 再写就会卡住（缓冲区已满），除非另有协程在收
+
+	fmt.Println(<-ch) // 10
+	fmt.Println(<-ch) // 20
+}
+```
+
+对比记住：
+
+|  | 无缓冲 `make(chan T)` | 有缓冲 `make(chan T, n)` |
+| --- | --- | --- |
+| 发送何时不卡 | 必须立刻有人接收 | 缓冲区还有空位 |
+| 接收何时不卡 | 必须立刻有人发送 | 缓冲区里已有数据 |
+| 典型用途 | 同步、交接结果 | 削峰、批量暂存 |
+
+入门选型：
+
+- 要「算完立刻交回 / 两边对齐」→ 无缓冲够用。
+
+- 生产者偶尔比消费者快一点，想先攒几条 → 有缓冲。
+
+### 15.4 关闭通道与 range
+
+发送方不再发时，应 `close(ch)`。接收方可以用 `range` 一直取，直到通道关闭：
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan int, 3)
+
+	ch <- 1
+	ch <- 2
+	ch <- 3
+	close(ch) // 关闭后不能再发送；还能继续接收剩余数据
+
+	for v := range ch {
+		fmt.Println(v)
+	}
+}
+```
+
+约定：
+
+1. **谁发送，谁关闭**；接收方一般不要 `close`。
+
+2. 对已关闭的通道再发送会 **panic**。
+
+3. 从已关闭且空的通道接收，会立刻拿到类型零值；可用 `v, ok := <-ch`，`ok == false` 表示已关闭且没有数据了。
+
+```go
+v, ok := <-ch
+if !ok {
+	fmt.Println("通道已关闭")
+}
+```
+
+### 15.5 select：同时等多个通道
+
+`select` 像通道版的 `switch`：哪个 case 能立刻收发，就走哪个；多个都能走时**随机选一个**。
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	ch1 := make(chan string)
+	ch2 := make(chan string)
+
+	go func() {
+		time.Sleep(50 * time.Millisecond)
+		ch1 <- "来自 ch1"
+	}()
+	go func() {
+		time.Sleep(30 * time.Millisecond)
+		ch2 <- "来自 ch2"
+	}()
+
+	for i := 0; i < 2; i++ {
+		select {
+		case msg := <-ch1:
+			fmt.Println(msg)
+		case msg := <-ch2:
+			fmt.Println(msg)
+		}
+	}
+}
+```
+
+常见输出（`ch2` 先就绪）：
+
+```
+来自 ch2
+来自 ch1
+```
+
+#### 15.5.1 default：非阻塞尝试
+
+所有 case 都暂时走不了时，如果写了 `default`，就立刻执行 `default`，**不会卡死**：
+
+```go
+select {
+case msg := <-ch:
+	fmt.Println("收到:", msg)
+default:
+	fmt.Println("暂时没有数据")
+}
+```
+
+适合「试一下有没有消息，没有就干别的」。
+
+#### 15.5.2 例子：带超时
+
+用 `time.After` 做一个超时分支，避免一直等某个通道：
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	ch := make(chan string)
+
+	go func() {
+		time.Sleep(200 * time.Millisecond)
+		ch <- "慢请求的结果"
+	}()
+
+	select {
+	case msg := <-ch:
+		fmt.Println(msg)
+	case <-time.After(100 * time.Millisecond):
+		fmt.Println("超时了")
+	}
+}
+```
+
+输出：
+
+```
+超时了
+```
+
+（把超时改成 `300ms`，就能收到「慢请求的结果」。）
+
+### 15.6 怎么选（入门版）
+
+| 场景 | 建议 |
+| --- | --- |
+| 协程算完把结果交回 | 无缓冲通道，`main` 里 `<-ch` |
+| 多个结果依次送出 | 发送完 `close`，接收端 `for range` |
+| 想先攒几条再处理 | 有缓冲 `make(chan T, n)` |
+| 同时等好几个通道 / 要超时 | `select` |
+| 试一下有没有数据，没有就继续 | `select` + `default` |
+| 多协程只是「等全部做完」、不传数据 | 继续用上一章的 `WaitGroup` |
+
+入门阶段先练熟：**创建 → 无缓冲/有缓冲区别 → 关闭与 range → select 多路与超时**。
+
+## 16. Go 互斥锁与读写锁
+
+上一章用 **channel** 在协程之间**传数据**。
+
+有时协程要**共改同一块内存**——比如几个协程一起往同一个切片里 `append`。这时通道不是唯一答案，标准库 `sync` 里的**锁**也很常用。
+
+入门先记住三件事：
+
+1. **互斥锁 `Mutex`**：同一时刻只允许一个协程进「临界区」改共享数据。
+
+2. 不加锁并发改切片 / map，可能丢数据、甚至崩溃（数据竞争）。
+
+3. **读写锁 `RWMutex`**：读可以多人同时读；写还是独占。适合「读多写少」。
+
+> 口诀对照：channel 偏「把结果递出去」；锁偏「大家轮流改同一份」。
+
+### 16.1 为什么要锁：奶茶菜单被同时加料
+
+场景：菜单里已有三杯奶茶，三个协程各自再加一杯。
+
+共享的是同一个切片 `arr`，改它时要排队。
+
+#### 16.1.1 加了互斥锁：每次都能累加成功
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+func worker(arr *[]string, wg *sync.WaitGroup, mu *sync.Mutex, tea string) {
+	defer wg.Done()
+	mu.Lock()                // 上锁：别人先别动 arr
+	*arr = append(*arr, tea) // 临界区：只有拿到锁的协程能改
+	mu.Unlock()              // 解锁：下一位可以进来
+}
+
+func main() {
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	arr := []string{"芋泥波波", "绿茶", "红茶"}
+
+	wg.Add(3)
+	go worker(&arr, &wg, &mu, "柠檬茶")
+	go worker(&arr, &wg, &mu, "霸王茶姬")
+	go worker(&arr, &wg, &mu, "爷爷不泡茶")
+	wg.Wait()
+
+	fmt.Println(arr)
+}
+```
+
+多次运行，切片里都会有 **6 个名字**（原来 3 个 + 新加 3 个）。顺序可能每次不同（谁先抢到锁谁先加），但**不会少**：
+
+```
+[芋泥波波 绿茶 红茶 柠檬茶 霸王茶姬 爷爷不泡茶]
+```
+
+或：
+
+```
+[芋泥波波 绿茶 红茶 霸王茶姬 柠檬茶 爷爷不泡茶]
+```
+
+要点：
+
+| 写法 | 含义 |
+| --- | --- |
+| `mu.Lock()` | 拿到锁；别人正在锁里时，这里会**卡住等待** |
+| `mu.Unlock()` | 放开锁；漏写会让别的协程永远等 |
+| `*arr` | 传的是切片指针，改的才是 `main` 里那份 |
+| `wg` / `mu` 也要传指针 | 和上一章 WaitGroup 一样，传值等于改副本，外面感知不到 |
+
+`defer wg.Done()` 放在函数开头，保证协程怎么退出都会报到；锁则建议**尽快 Unlock**，不要把无关的慢操作包在锁里。
+
+#### 16.1.2 不加锁会怎样：看起来像「被盖掉」
+
+把 `Lock` / `Unlock` 拿掉，三个协程同时 `append` 同一份切片：
+
+```go
+func worker(arr *[]string, wg *sync.WaitGroup, tea string) {
+	defer wg.Done()
+	*arr = append(*arr, tea) // 没有锁，多人同时改
+}
+```
+
+`append` 内部要读长度、扩容、写元素——几步叠在一起。多协程交错执行时，可能出现：
+
+- 有的茶**没加进去**（少了几杯，像被覆盖）
+
+- 偶发 **panic**（例如索引越界）
+
+- 用 `go run -race` 会报 **data race**
+
+所以入门结论很简单：**多人同时改同一份切片 / map，先加锁（或改成只用 channel 串行化）。**
+
+### 16.2 读写锁：读多写少时更合适
+
+`Mutex` 读写都互斥：有人读菜单时，别人也不能读。
+
+若业务是「很多人都在看菜单，偶尔改一次」，可以用 **`sync.RWMutex`**：
+
+- `RLock` / `RUnlock`：加**读锁**，多个读可以同时进行。
+
+- `Lock` / `Unlock`：加**写锁**，写的时候别人既不能读也不能写。
+
+下面继续用菜单：两个协程读、一个协程写。
+
+写这边故意 `Sleep(1ms)`，先让读锁先拿到，方便体会「读可以并行、写要等读完」。
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+func read(arr *[]string, wg *sync.WaitGroup, mu *sync.RWMutex) {
+	defer wg.Done()
+	mu.RLock()
+	fmt.Println(*arr)
+	time.Sleep(20 * time.Millisecond) // 模拟慢慢读
+	mu.RUnlock()
+}
+
+func write(arr *[]string, wg *sync.WaitGroup, mu *sync.RWMutex, tea string) {
+	defer wg.Done()
+	time.Sleep(1 * time.Millisecond) // 先让读锁触发
+	mu.Lock()
+	time.Sleep(10 * time.Millisecond) // 模拟写入耗时
+	*arr = append(*arr, tea)
+	mu.Unlock()
+}
+
+func main() {
+	var wg sync.WaitGroup
+	var rwmu sync.RWMutex
+	menu := []string{"芋泥波波", "绿茶", "红茶"}
+
+	wg.Add(3)
+	go read(&menu, &wg, &rwmu)
+	go read(&menu, &wg, &rwmu)
+	go write(&menu, &wg, &rwmu, "爷爷不泡茶")
+	wg.Wait()
+
+	fmt.Println("最终菜单", menu)
+}
+```
+
+可能的输出（两个读可以重叠，所以往往先看到两次「还没加料」的菜单；写在读锁释放后才能完成）：
+
+```
+[芋泥波波 绿茶 红茶]
+[芋泥波波 绿茶 红茶]
+最终菜单 [芋泥波波 绿茶 红茶 爷爷不泡茶]
+```
+
+要点：
+
+| 写法 | 含义 |
+| --- | --- |
+| `mu.RLock()` / `RUnlock()` | 读锁；多个 `read` 可以同时拿着 |
+| `mu.Lock()` / `Unlock()` | 写锁；要等读锁都放开，且期间别人读不了、也写不了 |
+| `write` 里先 `Sleep(1ms)` | 演示用：让读先执行；真实代码一般不需要这样凑时序 |
+
+记住：
+
+- 只读 → `RLock` / `RUnlock`
+
+- 要改 → 还是 `Lock` / `Unlock`（写锁）
+
+- 入门阶段：**不确定就用 `Mutex`**；确认读远多于写，再换成 `RWMutex`
+
+### 16.3 和 channel 怎么选（入门版）
+
+| 场景 | 建议 |
+| --- | --- |
+| 协程算完，把结果交回 | channel |
+| 多个结果依次汇总、或流水线 | channel |
+| 多个协程共改同一个切片 / map / 计数器 | `Mutex`（或 `RWMutex`） |
+| 读很多、写很少的共享数据 | 优先考虑 `RWMutex` |
+| 只是等任务做完、不改共享数据 | 继续用 `WaitGroup` 即可 |
+
+Go 社区常说「不要通过共享内存来通信，而要通过通信来共享内存」——意思是**优先 channel**。
+
+但计数器、缓存、就地改结构体字段这类场景，**加锁往往更直接**。两种都会用，按场景选。
+
+## 17. Go GMP 协程调度模型
+
+前面几章讲了怎么用 `go` 开协程、用 channel / 锁协作。
+
+本章往下挖一层：**这些协程到底是谁在跑、怎么排到 CPU 上的**——也就是 Go 运行时的 **GMP 调度模型**。
+
+入门先记住四件事：
+
+1. **G**：Goroutine，一个待执行的任务。
+
+2. **M**：Machine，操作系统内核线程，真正干活的人。
+
+3. **P**：Processor，逻辑处理器，手里攥着一批 G，并绑定到某个 M 上跑。
+
+4. Go 尽量在**用户态**切换 G，所以比直接开大量 OS 线程轻得多。
+
+> 口诀：G 是任务，M 是工人，P 是工位。工人必须坐到工位上，才能领任务干活。
+
+![GMP 三者关系](../../../assets/images/golang/gmp-overview.svg)
+
+### 17.1 为什么要有 GMP：直接用 OS 线程太贵
+
+如果并发全靠**操作系统原生线程**：
+
+- 一个线程栈通常大约 **1MB**，开多了内存先顶不住。
+
+- 线程切换要进**内核态**，上下文切换开销大。
+
+- 想支撑十几万、上百万并发，用「一任务一线程」基本不现实。
+
+Go 的做法是自己管一批轻量协程（G），再映射到少量 OS 线程（M）上跑：
+
+- 切换多在**用户态**完成，不用每次都进内核。
+
+- G 的初始栈大约只有 **2KB**，还带着**栈扩缩容**：用多少占多少，大任务再长大，用完可再缩。
+
+- 所以同样硬件上，轻松扛住**十几万甚至百万级**并发，这就是 GMP 要解决的痛点。
+
+### 17.2 G、M、P 分别是什么
+
+| 缩写 | 全称 | 可以怎么理解 |
+| --- | --- | --- |
+| **G** | Goroutine | 协程 / 任务：`go func()` 出来的就是一个 G |
+| **M** | Machine | OS 内核线程：真正执行机器码的人 |
+| **P** | Processor | 逻辑处理器：管理一批 G，并决定「下一个跑谁」 |
+
+几个关键关系：
+
+- **M 必须绑定 P，才能执行 G**。没有 P，M 就算醒着也拿不到本地任务队列。
+
+- **P 的数量默认等于 CPU 逻辑核数**（由 `GOMAXPROCS` 控制）。核有几个，默认就准备几个「工位」，尽量把多核吃满。
+
+- G 可以远多于 M 和 P：任务很多没关系，轮流上工位执行就行。
+
+可以脑补成奶茶店：
+
+- **G** = 一杯待做的订单
+
+- **P** = 一个操作台（台上最多排队一批订单）
+
+- **M** = 一个店员
+
+店员必须站到某个操作台前，才能按台上的订单做茶。
+
+### 17.3 旧模型的问题：没有 P，大家抢一把全局锁
+
+更早的调度（可以记成 **GM 模型**）大致是：
+
+- 只有一个**全局队列**装着所有待跑的 G
+
+- 多个 M 直接去这个全局队列里领任务
+
+多核 CPU 上一忙起来就会难受：
+
+- 多个 M 同时抢同一条全局队列
+
+- 队列本身要加锁保护
+
+- 抢锁、放锁变成常态，**锁竞争很重**，调度本身反而拖慢业务
+
+所以后来改进成现在的 **GMP**：加上 **P** 这一层，把「抢全局」改成「大部分时候各忙各的」。
+
+![旧 GM 与新 GMP 对比](../../../assets/images/golang/gmp-old-vs-new.svg)
+
+### 17.4 改进后的 GMP：每个 P 有自己的本地队列
+
+现在的主流程可以记成：
+
+1. 每个 **M 绑定一个 P**
+
+2. 每个 **P 管一个本地队列**（容量常见是 **256** 个 G）
+
+3. 新 G 优先放进当前 P 的本地队列
+
+4. 本地队列满了，再往**全局队列**放（或把一部分挪到全局）
+
+好处很直观：
+
+- 多数时候，M 只从**自己绑的 P** 的本地队列取 G
+
+- 本地取任务基本不用和别的核抢同一把大锁
+
+- 多核可以真正并行调度，性能上去了
+
+> 不是「完全没有锁」，而是把热点从「所有人抢一个全局队列」拆开了：本地为主，全局为辅。
+
+### 17.5 本地空了、全局也空了：Work Stealing（工作窃取）
+
+那如果某个 P：
+
+- 本地队列已经跑完了
+
+- 全局队列也空了
+
+这个核就要闲着吗？不会。运行时会触发 **Work Stealing（工作窃取）**：
+
+- 当前 P 去看别的 P 的本地队列
+
+- 若别人还有积压，就**偷走大约一半**任务到自己这边
+
+- 目的很简单：**别让 CPU 空转**，有活大家一起干
+
+可以继续用奶茶店类比：自己台子上的单做完了，别的台子还堆着，就过去搬一半回来做——总比干站着强。
+
+![Work Stealing 工作窃取](../../../assets/images/golang/gmp-work-stealing.svg)
+
+### 17.6 M 卡住了怎么办：Hand-off（交接）
+
+还有一种常见情况：某个 M 正在跑 G，结果这个 G **阻塞**了（比如陷入会卡住线程的系统调用）。
+
+这时如果还死抱着 P，那个「工位」就浪费了：核还在，却派不出新活。
+
+所以会触发 **Hand-off（交接）**：
+
+1. 当前阻塞的 **M 和 P 立刻解绑**
+
+2. **P 马上去找空闲的 M** 接手
+
+3. 若没有空闲 M，就**再创建一个 M**
+
+4. 新的（或空闲的）M 绑上这个 P，继续跑队列里剩下的 G
+
+这样多核不会因为「某个线程卡住」而整段闲置。等原来那个阻塞结束，M 还可以再找机会绑回某个 P 继续干活。
+
+> 补充一句入门口径：网络 I/O 很多会被运行时的 **netpoller** 做成「看起来阻塞、其实不白白占死线程」；这里说的 Hand-off，重点记「线程级阻塞时，P 会交出去」即可。
+
+![Hand-off 交接](../../../assets/images/golang/gmp-handoff.svg)
+
+### 17.7 串起来看一眼完整链路
+
+一次比较典型的调度路径：
+
+1. `go xxx` → 产生一个 **G**
+
+2. G 进当前 **P** 的本地队列（满了再进全局队列）
+
+3. **M** 绑定 **P**，从本地队列取 G 执行
+
+4. 本地空了 → 先看全局队列；还没有 → **Work Stealing** 偷别人一半
+
+5. 执行中线程阻塞 → **Hand-off**：P 换人（换 M）继续跑
+
+![GMP 完整调度链路](../../../assets/images/golang/gmp-flow.svg)
+
+所以你写业务时只看到 `go`，底下其实是：
+
+**很多轻量 G → 少量 P（约等于核数）→ 再映射到若干 M（OS 线程）**
+
+这也是 Go 能「代码写起来像随便开协程，跑起来又相对省」的原因。
+
+### 17.8 和前面几章怎么对上
+
+| 你在业务里写的 | 在 GMP 里大致对应 |
+| --- | --- |
+| `go func() { ... }()` | 创建一个 **G** |
+| 同时跑很多协程也不慌 | G 很轻，初始栈小，用户态切换 |
+| `GOMAXPROCS` | 大致控制 **P** 的个数 |
+| 协程里做很重的阻塞调用 | 可能让 **M** 卡住，触发 **Hand-off** |
+| channel / 锁让出执行权 | 当前 G 可以停下，P/M 去跑别的 G |
+
+入门阶段不必把源码细节背下来。先抓住这句就够：
+
+**G 是任务，P 是工位，M 是工人；本地队列减少抢锁，偷工避免空闲，交接避免阻塞拖死多核。**
+
+## 18. Go 文件与目录操作
+
+日常写服务、写脚本，免不了和磁盘打交道：建文件、写内容、读出来、删掉，再进阶一点就是目录。
+
+这些能力主要在标准库 **`os`**（以及一点 `io`）里。
+
+入门先记住五件事：
+
+1. 简单读写可用 `os.WriteFile` / `os.ReadFile`。
+
+2. 更精细的控制用 **`os.OpenFile`**（flag + 权限）。
+
+3. 文件用完要 **`Close`**，习惯写 `defer f.Close()`。
+
+4. Unix 权限用八进制，如 `0644`、`0755`；**在 Windows 上这些权限位基本无效**。
+
+5. 目录用 `Mkdir` / `MkdirAll`，删目录用 `Remove` / `RemoveAll`。
+
+> 口诀：简单读写用 `ReadFile` / `WriteFile`；要追加、排他创建、自定义权限，再上 `OpenFile`。
+
+### 18.1 创建文件
+
+最直接：`os.Create`。文件不存在就创建；**已存在会清空成 0 字节**（相当于截断）。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	f, err := os.Create("note.txt")
+	if err != nil {
+		fmt.Println("创建失败:", err)
+		return
+	}
+	defer f.Close()
+
+	fmt.Println("创建成功:", f.Name())
+}
+```
+
+要点：
+
+| 写法 | 含义 |
+| --- | --- |
+| `os.Create(name)` | 创建或截断文件，返回 `*os.File` |
+| `defer f.Close()` | 函数结束时关文件，避免句柄泄漏 |
+| `err != nil` | 磁盘满、没权限、路径非法时都会报错 |
+
+> `Create` 底层大致等于：`OpenFile(name, O_RDWR|O_CREATE|O_TRUNC, 0666)`。
+
+### 18.2 写入内容
+
+#### 18.2.1 方式一：拿到 `*File` 再写
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	f, err := os.Create("note.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	n, err := f.WriteString("你好，zuishuaicc\n")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("写入字节数:", n)
+
+	_, err = f.Write([]byte("第二行：奶茶菜单\n"))
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+| 写法 | 含义 |
+| --- | --- |
+| `WriteString(s)` | 写字符串 |
+| `Write(b)` | 写字节切片 |
+| 返回值 `n` | 实际写入的字节数 |
+
+#### 18.2.2 方式二：一行写完（更常用）
+
+```go
+err := os.WriteFile("note.txt", []byte("你好，zuishuaicc\n"), 0644)
+if err != nil {
+	panic(err)
+}
+```
+
+`WriteFile` 会：创建/截断 → 写入 → 关闭。适合「整份内容一次写完」。
+
+### 18.3 读取详情
+
+##### 一次读完整文件
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	data, err := os.ReadFile("note.txt")
+	if err != nil {
+		fmt.Println("读取失败:", err)
+		return
+	}
+	fmt.Println(string(data))
+}
+```
+
+##### 打开后再读（适合大文件、边读边处理）
+
+```go
+package main
+
+import (
+	"fmt"
+	"io"
+	"os"
+)
+
+func main() {
+	f, err := os.Open("note.txt") // 只读打开；不存在会报错
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	buf := make([]byte, 64)
+	for {
+		n, err := f.Read(buf)
+		if n > 0 {
+			fmt.Print(string(buf[:n]))
+		}
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+```
+
+##### 看文件元信息：`Stat`
+
+```go
+info, err := os.Stat("note.txt")
+if err != nil {
+	panic(err)
+}
+fmt.Println("名字:", info.Name())
+fmt.Println("大小:", info.Size(), "字节")
+fmt.Println("是目录吗:", info.IsDir())
+fmt.Println("权限:", info.Mode())
+fmt.Println("修改时间:", info.ModTime())
+```
+
+| API | 用途 |
+| --- | --- |
+| `os.ReadFile` | 小文件一次性读完 |
+| `os.Open` | 只读打开，再 `Read` |
+| `os.Stat` | 大小、权限、是否目录、修改时间 |
+
+### 18.4 删除文件
+
+```go
+err := os.Remove("note.txt")
+if err != nil {
+	fmt.Println("删除失败:", err)
+	return
+}
+fmt.Println("已删除")
+```
+
+| API | 行为 |
+| --- | --- |
+| `os.Remove(path)` | 删文件；也可删**空目录** |
+| `os.RemoveAll(path)` | 递归删除：文件、非空目录都能删（慎用） |
+
+文件不存在时，`Remove` 会返回错误（可用 `os.IsNotExist(err)` 判断）。
+
+### 18.5 高级：os.OpenFile
+
+当「只创建 / 只读 / 只写」不够用时，上 **`OpenFile`**：
+
+```go
+func OpenFile(name string, flag int, perm FileMode) (*File, error)
+```
+
+三个参数：
+
+1. **`name`**：路径
+
+2. **`flag`**：怎么打开（可读？追加？不存在是否创建？）——常用常量按位或 `|` 组合
+
+3. **`perm`**：新建文件时的权限（如 `0644`）——**主要对 Unix/Linux/macOS 有意义**
+
+示例：追加写入（文件不存在就创建）：
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	f, err := os.OpenFile("log.txt", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	_, err = f.WriteString("又来了一单奶茶\n")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("追加成功")
+}
+```
+
+#### 18.5.1 flag 常用枚举（可 `|` 组合）
+
+| 常量 | 含义 |
+| --- | --- |
+| `os.O_RDONLY` | 只读 |
+| `os.O_WRONLY` | 只写 |
+| `os.O_RDWR` | 读写 |
+| `os.O_CREATE` | 不存在则创建 |
+| `os.O_APPEND` | 写的时候追加到末尾 |
+| `os.O_TRUNC` | 打开时把文件截断为 0 字节 |
+| `os.O_EXCL` | 与 `O_CREATE` 一起用：文件**已存在则失败**（排他创建） |
+| `os.O_SYNC` | 尽量同步写到磁盘（更安全，更慢） |
+
+读写权限类（`O_RDONLY` / `O_WRONLY` / `O_RDWR`）通常**三选一**；其它用 `|` 叠上去：
+
+```go
+// 读写 + 不存在则创建 + 追加
+os.O_RDWR | os.O_CREATE | os.O_APPEND
+
+// 只写 + 不存在则创建 + 每次打开清空（覆盖写）
+os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+
+// 创建但已存在就报错（防止误覆盖）
+os.O_WRONLY | os.O_CREATE | os.O_EXCL
+```
+
+和快捷 API 的对应关系（帮助记忆）：
+
+| 快捷写法 | 大致等价 |
+| --- | --- |
+| `os.Open(name)` | `OpenFile(name, O_RDONLY, 0)` |
+| `os.Create(name)` | `OpenFile(name, O_RDWR\|O_CREATE\|O_TRUNC, 0666)` |
+
+#### 18.5.2 权限 perm：0777 / 0644 到底什么意思
+
+`perm` 是 **Unix 文件模式**，Go 里常写成**八进制**字面量：以 **`0` 开头**，如 `0644`、`0755`、`0777`。
+
+##### 先记三个基本位：r w x
+
+每一位权限用一个数字相加（不是 4、3、2）：
+
+| 符号 | 含义 | 数值 |
+| --- | --- | --- |
+| **r** | read 读 | **4** |
+| **w** | write 写 | **2** |
+| **x** | execute 执行（对目录表示「能否进入」） | **1** |
+
+所以一个人的权限可以是：
+
+| 组合 | 计算 | 常见读法 |
+| --- | --- | --- |
+| `---` | 0 | 什么都不能 |
+| `--x` | 1 | 只能执行 |
+| `-w-` | 2 | 只能写 |
+| `-wx` | 2+1=3 | 写 + 执行 |
+| `r--` | 4 | 只能读 |
+| `r-x` | 4+1=5 | 读 + 执行 |
+| `rw-` | 4+2=6 | 读 + 写 |
+| `rwx` | 4+2+1=**7** | 全部可以 |
+
+##### 再记三段人：所有者、组、其他人
+
+一个完整权限是 **三组** `rwx`，从左到右：
+
+```
+0  7  7  7
+│  │  │  └─ 其他人（other）
+│  │  └──── 所属组（group）
+│  └─────── 所有者（owner / user）
+└────────── 八进制前缀（Go 字面量写法）
+```
+
+| 位置 | 是谁 |
+| --- | --- |
+| 左数第一位数字 | **文件所有者**（创建者账号） |
+| 中间一位 | **所属组**（同一组的用户） |
+| 右边一位 | **其他人**（既不是主人也不是同组） |
+
+例子：
+
+| 权限 | 拆解 | 含义 |
+| --- | --- | --- |
+| `0644` | owner=`rw-`(6)，group=`r--`(4)，other=`r--`(4) | 自己可读写；别人只读。**文件很常见** |
+| `0755` | owner=`rwx`(7)，group=`r-x`(5)，other=`r-x`(5) | 自己全能；别人可读可进。**目录 / 可执行文件很常见** |
+| `0777` | 三段都是 `rwx`(7) | **所有人都能读、写、执行**——方便但危险，生产少用 |
+| `0600` | 只有 owner=`rw-` | 只有自己能读写，适合密钥、token |
+
+对照 Linux 上常见显示：
+
+```
+-rw-r--r--   →  0644
+drwxr-xr-x   →  0755
+-rwxrwxrwx   →  0777
+```
+
+最左边的 `-` / `d` 表示普通文件还是目录，不算在三位数字里。
+
+##### 重要：在 Windows 上这些权限基本无效
+
+Go 在 Windows 上**仍然要你传 `perm`**，但系统**不会按 Unix 那套 owner/group/other 去落实**。
+
+入门可以记：
+
+- 写跨平台代码时，`0644`、`0755` 照常写，Linux/macOS 上生效。
+
+- 到了 **Windows**，别指望 `0777`、`0644` 真的控制「谁能读谁能写」。
+
+- Windows 更认自己的 ACL 权限模型；Go 的 `perm` 在这里往往被忽略或只产生很有限影响。
+
+所以：
+
+**权限位是 Unix 世界的规则；Windows 上别拿 `0777` 当安全配置。**
+
+### 18.6 文件夹（目录）操作
+
+文件会了，目录也是同一套 `os` 思路。
+
+#### 18.6.1 创建目录
+
+```go
+// 只创建一层；父目录不存在会失败
+err := os.Mkdir("data", 0755)
+
+// 递归创建：a/b/c 一层层建好
+err = os.MkdirAll("data/logs/2026", 0755)
+```
+
+| API | 行为 |
+| --- | --- |
+| `os.Mkdir(path, perm)` | 创建单层目录 |
+| `os.MkdirAll(path, perm)` | 递归创建；已存在则通常不报错 |
+
+目录权限常用 **`0755`**：自己可进可改，别人可进可列，不能随便改。
+
+#### 18.6.2 读目录里有什么
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	entries, err := os.ReadDir(".")
+	if err != nil {
+		panic(err)
+	}
+	for _, e := range entries {
+		kind := "文件"
+		if e.IsDir() {
+			kind = "目录"
+		}
+		fmt.Println(kind, e.Name())
+	}
+}
+```
+
+`ReadDir` 返回 `[]fs.DirEntry`，比老的 `Readdir` 更轻量，入门优先用它。
+
+#### 18.6.3 删除 / 重命名 / 判断存在
+
+```go
+// 删空目录（里面还有东西会失败）
+os.Remove("data")
+
+// 递归删整个目录树（危险，先确认路径）
+os.RemoveAll("data")
+
+// 重命名或移动
+os.Rename("note.txt", "note.bak.txt")
+
+// 判断路径是否存在
+_, err := os.Stat("note.txt")
+if os.IsNotExist(err) {
+	fmt.Println("不存在")
+} else if err != nil {
+	fmt.Println("其它错误:", err)
+} else {
+	fmt.Println("存在")
+}
+```
+
+| API | 用途 |
+| --- | --- |
+| `os.Remove` | 删文件或**空**目录 |
+| `os.RemoveAll` | 递归删除 |
+| `os.Rename` | 改名 / 移动 |
+| `os.Stat` + `os.IsNotExist` | 判断在不在 |
+
+#### 18.6.4 小综合：建目录 → 写文件 → 读回来 → 清理
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+)
+
+func main() {
+	dir := "demo_data"
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		panic(err)
+	}
+
+	path := filepath.Join(dir, "menu.txt")
+	content := []byte("芋泥波波\n绿茶\n红茶\n")
+
+	if err := os.WriteFile(path, content, 0644); err != nil {
+		panic(err)
+	}
+
+	// 追加一行
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	_, _ = f.WriteString("爷爷不泡茶\n")
+	f.Close()
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("文件内容:\n" + string(data))
+
+	// 演示完清理
+	_ = os.RemoveAll(dir)
+}
+```
+
+`path/filepath.Join` 会按当前系统拼路径（Windows 用 `\`，Linux 用 `/`），比手写 `"a/" + "b"` 更稳。
+
+### 18.7 速查表
+
+| 你想做的事 | 优先用 |
+| --- | --- |
+| 整文件写入 | `os.WriteFile` |
+| 整文件读取 | `os.ReadFile` |
+| 追加日志 | `OpenFile(..., O_CREATE\|O_WRONLY\|O_APPEND, 0644)` |
+| 防止覆盖已有文件 | `O_CREATE\|O_EXCL` |
+| 看大小 / 是否目录 | `os.Stat` |
+| 删一个文件 | `os.Remove` |
+| 建多层目录 | `os.MkdirAll` |
+| 列目录 | `os.ReadDir` |
+| 删整棵目录树 | `os.RemoveAll`（慎用） |
+
+入门阶段先把 **`WriteFile` / `ReadFile` / `Remove` / `MkdirAll` / `OpenFile+APPEND`** 练熟；权限先记住文件 `0644`、目录 `0755`，并清楚 **Windows 上 Unix 权限位基本当摆设**。
+
+## 19. Go JSON 序列化与反序列化
+
+写接口、存配置、跟前端或别的服务交换数据，几乎都会碰到 **JSON**。
+
+Go 标准库 **`encoding/json`** 负责两件事：
+
+- **序列化（Marshal）**：把 Go 的值变成 JSON 字节（`[]byte`）
+
+- **反序列化（Unmarshal）**：把 JSON 字节解析回 Go 的值
+
+入门先记住五件事：
+
+1. 序列化用 `json.Marshal`，反序列化用 `json.Unmarshal`。
+
+2. 结构体字段必须**导出**（首字母大写），否则 JSON 里看不到。
+
+3. 用 `` `json:"字段名"` `` 标签控制 JSON 里的名字。
+
+4. `omitempty` 可以在「空值」时省略该字段。
+
+5. 反序列化时第二个参数必须是**指针**。
+
+> 口诀：出站 `Marshal`，进站 `Unmarshal`；字段要大写，名字靠 tag。
+
+### 19.1 序列化：Marshal
+
+把结构体、map、切片等变成 JSON：
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type Person struct {
+	Name string
+	Age  int
+	City string
+}
+
+func main() {
+	p := Person{Name: "zuishuaicc", Age: 18, City: "杭州"}
+
+	data, err := json.Marshal(p)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(data))
+	// {"Name":"zuishuaicc","Age":18,"City":"杭州"}
+}
+```
+
+| 写法 | 含义 |
+| --- | --- |
+| `json.Marshal(v)` | 返回 `[]byte` 和 `error` |
+| `string(data)` | 把字节转成可读字符串 |
+| 字段名 | 默认用结构体字段名（如 `Name`） |
+
+想格式化（缩进、好看一点）用 `MarshalIndent`：
+
+```go
+data, err := json.MarshalIndent(p, "", "  ")
+if err != nil {
+	panic(err)
+}
+fmt.Println(string(data))
+```
+
+输出类似：
+
+```json
+{
+  "Name": "zuishuaicc",
+  "Age": 18,
+  "City": "杭州"
+}
+```
+
+### 19.2 反序列化：Unmarshal
+
+把 JSON 填进结构体。**第二个参数必须是指针**：
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type Person struct {
+	Name string
+	Age  int
+	City string
+}
+
+func main() {
+	raw := []byte(`{"Name":"zuishuaicc","Age":18,"City":"杭州"}`)
+
+	var p Person
+	err := json.Unmarshal(raw, &p) // 注意 &p
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("%+v\n", p)
+	// {Name:zuishuaicc Age:18 City:杭州}
+}
+```
+
+| 写法 | 含义 |
+| --- | --- |
+| `json.Unmarshal(data, &v)` | 把 JSON 写入 `v` |
+| 必须传指针 | 传值无法修改外部变量 |
+| JSON 多了字段 | 默认忽略，不报错 |
+| JSON 少了字段 | 对应字段保持零值 |
+
+> 忘了写 `&` 会报错：`json: Unmarshal(non-pointer ...)`。
+
+### 19.3 结构体标签（json tag）
+
+接口里常见小写字段名（`name`、`age`），而 Go 导出字段必须大写。用 tag 对齐两边：
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type Person struct {
+	Name string `json:"name"`
+	Age  int    `json:"age"`
+	City string `json:"city"`
+}
+
+func main() {
+	p := Person{Name: "zuishuaicc", Age: 18, City: "杭州"}
+
+	data, _ := json.Marshal(p)
+	fmt.Println(string(data))
+	// {"name":"zuishuaicc","age":18,"city":"杭州"}
+
+	var p2 Person
+	_ = json.Unmarshal([]byte(`{"name":"奶茶","age":20,"city":"上海"}`), &p2)
+	fmt.Printf("%+v\n", p2)
+	// {Name:奶茶 Age:20 City:上海}
+}
+```
+
+常用 tag 选项：
+
+| tag | 作用 |
+| --- | --- |
+| `` `json:"name"` `` | JSON 字段名用 `name` |
+| `` `json:"name,omitempty"` `` | 空值时不输出该字段 |
+| `` `json:"-"` `` | 序列化/反序列化都忽略 |
+| `` `json:",omitempty"` `` | 保留字段名，只加 omitempty |
+
+#### 19.3.1 omitempty
+
+「空」的含义：`0`、`""`、`false`、`nil`、空切片/map 等零值。
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type User struct {
+	Name   string   `json:"name"`
+	Age    int      `json:"age,omitempty"`
+	Tags   []string `json:"tags,omitempty"`
+	Secret string   `json:"-"` // 永远不出现在 JSON 里
+}
+
+func main() {
+	u := User{Name: "zuishuaicc", Secret: "不要对外暴露"}
+	data, _ := json.Marshal(u)
+	fmt.Println(string(data))
+	// {"name":"zuishuaicc"}
+	// Age=0、Tags=nil 被 omitempty 省略；Secret 被 - 忽略
+}
+```
+
+### 19.4 嵌套结构体
+
+JSON 里经常有对象套对象，对应 Go 的嵌套结构体：
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type Address struct {
+	City   string `json:"city"`
+	Street string `json:"street"`
+}
+
+type Order struct {
+	ID      int     `json:"id"`
+	Product string  `json:"product"`
+	Addr    Address `json:"address"`
+}
+
+func main() {
+	o := Order{
+		ID:      1001,
+		Product: "芋泥波波",
+		Addr:    Address{City: "杭州", Street: "西湖路"},
+	}
+
+	data, _ := json.Marshal(o)
+	fmt.Println(string(data))
+	// {"id":1001,"product":"芋泥波波","address":{"city":"杭州","street":"西湖路"}}
+
+	raw := []byte(`{"id":1002,"product":"绿茶","address":{"city":"上海","street":"南京路"}}`)
+	var o2 Order
+	_ = json.Unmarshal(raw, &o2)
+	fmt.Printf("%+v\n", o2)
+}
+```
+
+### 19.5 map 与切片
+
+不一定非要结构体，map 和切片也能直接编解码：
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+func main() {
+	// map → JSON
+	m := map[string]any{
+		"name": "zuishuaicc",
+		"age":  18,
+		"ok":   true,
+	}
+	data, _ := json.Marshal(m)
+	fmt.Println(string(data))
+
+	// JSON → map
+	var m2 map[string]any
+	_ = json.Unmarshal(data, &m2)
+	fmt.Println(m2["name"], m2["age"])
+	// 注意：JSON 数字默认解成 float64
+
+	// 切片
+	list := []string{"芋泥波波", "绿茶", "红茶"}
+	b, _ := json.Marshal(list)
+	fmt.Println(string(b)) // ["芋泥波波","绿茶","红茶"]
+}
+```
+
+> `map[string]any` 很灵活，但类型要自己断言。业务数据优先用结构体，类型更安全。
+
+数字反序列化进 `any` 时是 **`float64`**，不是 `int`：
+
+```go
+var m map[string]any
+_ = json.Unmarshal([]byte(`{"age":18}`), &m)
+age := m["age"].(float64) // 对
+// age := m["age"].(int)  // panic：类型不对
+```
+
+### 19.6 Encoder / Decoder（流式）
+
+跟文件、网络连接打交道时，不必先读成整段 `[]byte`，可以用流式接口：
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"strings"
+)
+
+type Person struct {
+	Name string `json:"name"`
+	Age  int    `json:"age"`
+}
+
+func main() {
+	// Encoder：往 Writer 写 JSON
+	enc := json.NewEncoder(os.Stdout)
+	_ = enc.Encode(Person{Name: "zuishuaicc", Age: 18})
+	// 输出一行 JSON，末尾自带换行
+
+	// Decoder：从 Reader 读 JSON
+	r := strings.NewReader(`{"name":"奶茶","age":20}`)
+	dec := json.NewDecoder(r)
+
+	var p Person
+	_ = dec.Decode(&p)
+	fmt.Printf("%+v\n", p)
+}
+```
+
+| API | 场景 |
+| --- | --- |
+| `Marshal` / `Unmarshal` | 内存里一整段 JSON |
+| `NewEncoder` / `NewDecoder` | 文件、HTTP Body、长连接等流 |
+
+### 19.7 常见坑
+
+#### 19.7.1 字段未导出
+
+```go
+type Bad struct {
+	name string // 小写：Marshal 后是 {}
+}
+```
+
+必须写成 `Name`，再用 tag 映射成 `name`。
+
+#### 19.7.2 时间字段
+
+`time.Time` 默认按 RFC3339 字符串编解码：
+
+```go
+type Event struct {
+	Name string    `json:"name"`
+	At   time.Time `json:"at"`
+}
+```
+
+JSON 侧一般是 `"2026-10-15T23:52:00+08:00"` 这种格式。
+
+#### 19.7.3 指针字段与 omitempty
+
+想用「没传」和「传了零值」区分时，常用指针：
+
+```go
+type Patch struct {
+	Age *int `json:"age,omitempty"`
+}
+// Age == nil → 没传；Age 指向 0 → 明确传了 0
+```
+
+#### 19.7.4 严格校验多余字段
+
+默认会忽略 JSON 里多出来的键。若要拒绝未知字段：
+
+```go
+dec := json.NewDecoder(r)
+dec.DisallowUnknownFields()
+err := dec.Decode(&p)
+```
+
+### 19.8 速查表
+
+| 你想做的事 | 优先用 |
+| --- | --- |
+| 值 → JSON 字节 | `json.Marshal` |
+| 美化输出 | `json.MarshalIndent` |
+| JSON 字节 → 值 | `json.Unmarshal(data, &v)` |
+| 改 JSON 字段名 | `` `json:"xxx"` `` |
+| 空值不输出 | `` `json:"xxx,omitempty"` `` |
+| 永久隐藏字段 | `` `json:"-"` `` |
+| 写到文件/响应流 | `json.NewEncoder(w).Encode(v)` |
+| 从请求体读 | `json.NewDecoder(r).Decode(&v)` |
+
+入门阶段先把 **`Marshal` / `Unmarshal` + 结构体 tag** 练熟；需要读写 HTTP Body 或文件时再上 `Encoder` / `Decoder`。

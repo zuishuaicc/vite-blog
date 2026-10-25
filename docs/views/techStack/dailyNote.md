@@ -54,3 +54,5 @@ https://rustfs.com/
 ## 使用canvas构建页面 uikit
 
 https://github.com/xiaxiangfeng/beyond-dom-ui
+## 图标切换动画库
+https://www.morphicons.com/

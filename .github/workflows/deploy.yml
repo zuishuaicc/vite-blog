@@ -1,32 +1,42 @@
+# 工作流名称：Deploy（在 GitHub 仓库 Actions 页面显示）
 name: Deploy
 
+# 触发条件
 on:
   push:
     branches:
-      - master
-  workflow_dispatch:
+      - master # 推送到 master 分支时自动触发部署
+  workflow_dispatch: # 支持在 Actions 页面手动触发（手动部署）
 
+# 并发控制：同一时间只允许一个部署任务运行
 concurrency:
-  group: pages
-  cancel-in-progress: true
+  group: pages # 使用固定的并发组 "pages"，让部署任务排队执行
+  cancel-in-progress: true # 新的部署触发时，取消正在进行中的旧部署，避免互相覆盖
 
 jobs:
+  # 部署任务
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # 运行在 GitHub 托管的最新 Ubuntu 环境上
     steps:
+      # 检出仓库代码到运行环境
       - uses: actions/checkout@v4
+
+      # 安装 Node.js 运行环境
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
-          # cache: npm
-      - run: corepack enable
-      - run: pnpm install --frozen-lockfile
+          node-version: 24 # Node.js 版本
+          # cache: npm # 使用 npm 缓存依赖（本项目用 pnpm，故注释掉）
 
+      - run: corepack enable # 启用 corepack，使 pnpm 可用（随 packageManager 字段自动安装对应版本）
+      - run: pnpm install --frozen-lockfile # 按 lockfile 精确安装依赖，锁文件不一致时直接失败，保证可复现
+
+      # 构建 VitePress 站点，产物输出到 docs/.vitepress/dist
       - name: Build
         run: pnpm run docs:build
 
+      # 将构建产物发布到 gh-pages 分支（GitHub Pages 源分支）
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/.vitepress/dist
+          github_token: ${{ secrets.GITHUB_TOKEN }} # 使用仓库自带的 token，无需额外配置密钥
+          publish_dir: docs/.vitepress/dist # 要发布的目录（VitePress 构建输出目录）
