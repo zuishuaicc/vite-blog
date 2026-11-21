@@ -5,6 +5,14 @@ outline: deep
 
 ## 1. Go 语言基础入门
 
+Go（又称 Golang）是 **Google** 在 2007 年推出、2009 年正式开源的静态编译型编程语言，由
+
+- 肯·汤普森 (Ken Thompson)：图灵奖得主，是C语言的前身B语言的作者、UNIX操作系统的发明人之一。他还参与了Plan 9操作系统和UTF-8编码的设计
+
+- 罗伯·派克 (Rob Pike)：曾是贝尔实验室UNIX开发团队成员，也是Plan 9操作系统和Inferno操作系统开发的主要领导人。他与肯·汤普森共同设计了UTF-8编码
+
+- 罗伯特·格瑞史莫 (Robert Griesemer)：曾为谷歌的V8 JavaScript引擎、Chubby以及HotSpot JVM（Java虚拟机）做出重要贡献
+
 ### 1.1 Go 语言特点
 
 Go 的设计哲学是「少即是多」—— 砍掉冗余特性，专注工程效率与可维护性。以下是它最核心的几大特点：
@@ -1424,6 +1432,8 @@ func main() {
 
 当需要处理**三种及以上**的分支时，可以在 `if` 后面连续使用 `else if`，从上到下依次判断，**命中第一个为真的分支后就不再往下执行**。最后的 `else` 用于兜底，处理所有未匹配的情况。
 
+上面示例模拟了用户在线状态：`Status` 为「在线」「离线」「忙碌」时分别输出对应文字，其他值则输出「未知状态」。
+
 同样的逻辑，用 `switch` 写会更简洁——把要判断的值写在 `switch` 后面，每个 `case` 对应一种取值：
 
 ```go
@@ -1495,7 +1505,7 @@ func main() {
 }
 ```
 
-多个 if 条件判断可以嵌套使用。上面的例子先判断年龄是否满 18 岁，如果满足，再判断性别；不满足则输出「未成年」，再判断性别。这就是一个基本的逻辑嵌套。当然也不是只能嵌套两层，可以嵌套多层，但是要注意逻辑的正确性。
+多个 if 条件判断可以嵌套使用，我们首先判断年龄是否等于 18，如果等于 18，则再判断性别是否等于「男」，如果等于「男」，则输出「成年男性」，否则输出「成年女性」。如果不等于 18，则输出「未成年」，再判断性别是否等于「男」，如果等于「男」，则输出「未成年男性」，否则输出「未成年女性」。这就是一个基本的逻辑嵌套。当然也不是只能嵌套两层，可以嵌套多层，但是要注意逻辑的正确性。
 
 ### 9.4 逻辑运算符
 
@@ -4491,3 +4501,991 @@ err := dec.Decode(&p)
 | 从请求体读 | `json.NewDecoder(r).Decode(&v)` |
 
 入门阶段先把 **`Marshal` / `Unmarshal` + 结构体 tag** 练熟；需要读写 HTTP Body 或文件时再上 `Encoder` / `Decoder`。
+
+## 20. Go 自定义类型
+
+基本类型（`int`、`string`…）能用，但有时不够「说话」。比如用户名和地址都是字符串，用户 ID 和订单 ID 都是整数——混着用很容易传错参。
+
+Go 允许用 `type` 基于已有类型定义**新类型**：
+
+```go
+type 新类型名 底层类型
+```
+
+新类型和底层类型「长得像」，但在编译器眼里是**不同的类型**。这一点带来两个很实用的能力：
+
+1. **可以挂方法**——像结构体一样，给自己的类型加行为
+2. **类型安全**——同底层类型的不同语义，编译期就能拦住传参错误
+
+### 20.1 自定义类型可以挂方法
+
+定义一个基于 `string` 的 `Name`，再给它挂两个方法：加前缀、拼随机后缀。
+
+```go
+package main
+
+import (
+	"fmt"
+	"math/rand/v2"
+	"strconv"
+)
+
+// 基于 string 定义新类型 Name
+type Name string
+
+// 给 Name 挂方法：加前缀
+func (n Name) PrefixName() Name {
+	return "哈夫克-" + n
+}
+
+// 给 Name 挂方法：拼一个 1~100 的随机数字后缀
+func (n Name) RandomName() Name {
+	ran := rand.IntN(100) + 1 // IntN(100) 是 [0,100)，再 +1 变成 [1,100]
+	return n + Name(strconv.Itoa(ran))
+}
+
+func main() {
+	var name Name = "张三"
+
+	fmt.Println(name.PrefixName()) // 哈夫克-张三
+	fmt.Println(name.RandomName()) // 张三42（数字每次不同）
+}
+```
+
+几点说明：
+
+- `func (n Name) Xxx()` 里的 `(n Name)` 叫**接收者**，表示这个方法挂在 `Name` 上，用 `变量.方法()` 调用
+- 自定义类型和底层类型不能直接相加：`"哈夫克-" + n` 可以，是因为字符串字面量和 `Name` 的底层都是 `string`，Go 会自动处理；而数字要先 `strconv.Itoa`，再显式转成 `Name(...)`
+- 普通 `string` **没有**这两个方法；只有 `Name` 才能调，这正是「挂方法」的意义
+
+> 方法也能挂在基于 `int`、`float64` 等类型上，写法一样。结构体挂方法更常见，本质相同。
+
+### 20.2 规避同类型传参错误
+
+实际业务里，用户 ID、订单 ID 往往都是 `int`。如果函数写成：
+
+```go
+func CreateOrder(uid int, oid int) { ... }
+```
+
+调用时把两个参数写反，编译器**完全不管**——两个都是 `int`，语法没错，逻辑却炸了。
+
+用自定义类型把语义拆开：
+
+```go
+package main
+
+import "fmt"
+
+type Uid int // 用户 ID
+type Oid int // 订单 ID
+
+// 参数用自定义类型，语义一目了然
+func CreateOrder(uid Uid, oid Oid) (Uid, Oid) {
+	fmt.Println("创建订单：用户", uid, "订单", oid)
+	return uid, oid
+}
+
+func main() {
+	uid := Uid(10)
+	oid := Oid(10086)
+
+	// 正确：类型对得上
+	CreateOrder(uid, oid)
+
+	// 错误示范（解开注释会编译失败）：
+	// CreateOrder(oid, uid)
+	// 报错类似：cannot use oid (variable of type Oid) as Uid value in argument to CreateOrder
+
+	// 就算底层都是 int，也不能直接把 int 传进去：
+	// var n int = 10
+	// CreateOrder(n, oid) // cannot use n (variable of type int) as Uid value
+}
+```
+
+对比一下：
+
+| 写法 | 传反参数时 |
+| --- | --- |
+| `func CreateOrder(uid int, oid int)` | 编译通过，运行时逻辑错误 |
+| `func CreateOrder(uid Uid, oid Oid)` | **编译直接报错**，问题在写代码时就被拦住 |
+
+自定义类型和底层类型、以及其他自定义类型之间，需要**显式转换**，例如 `Uid(10)`、`int(uid)`。多写几个括号，换来的是少踩坑——很值。
+
+### 20.3 小结
+
+| 能力 | 做法 | 好处 |
+| --- | --- | --- |
+| 挂方法 | `type Name string` + `func (n Name) Xxx()` | 给类型绑定专属行为 |
+| 类型安全 | `type Uid int` / `type Oid int` | 同底层类型不同语义，编译期防传参错误 |
+
+记住一句话：**自定义类型 ≈ 底层类型的「带标签版本」**——能当同类数据用，但名字不同、方法不同、传参也不能乱混。
+
+## 21. Go 反射
+
+上一篇讲了**自定义类型**。类型在编译期就定死了——那运行时怎么「看」一个值到底是什么类型、能不能改、有没有某个方法？
+
+答案是标准库 `reflect`：**在运行时检查类型、读写值、调用方法**。框架、ORM、JSON 编解码底层都大量用到它。
+
+> 反射灵活，但代码更绕、也更慢。日常业务能用接口 / 泛型解决的，优先别上反射。
+
+下面用同一个自定义类型 `Age`，分三个案例：
+
+```go
+type Age int
+```
+
+### 21.1 用反射做判断
+
+先拿到类型信息，再看「叫什么名」「底层是什么」。
+
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+type Age int
+
+func main() {
+	var age Age = 99
+	t := reflect.TypeOf(age)
+
+	fmt.Println(t.Name()) // Age —— 类型名（自定义类型的名字）
+	fmt.Println(t.Kind()) // int —— 底层种类（拿来做判断）
+
+	if t.Kind() == reflect.Int {
+		fmt.Println("他绝对是一个 int 类型")
+	}
+}
+```
+
+| API | 作用 | 本例结果 |
+| --- | --- | --- |
+| `reflect.TypeOf(x)` | 拿到 `x` 的类型描述 | `Age` 的 `reflect.Type` |
+| `t.Name()` | 类型名称 | `"Age"` |
+| `t.Kind()` | 底层种类（int / string / struct…） | `reflect.Int` |
+
+`Name` 和 `Kind` 别混：
+
+- `Name()`：你起的名字（`Age`）
+- `Kind()`：真正的底层形态（`int`）
+
+做分支判断时，几乎总是比 `Kind()`，例如 `reflect.Int`、`reflect.String`、`reflect.Struct`。
+
+### 21.2 通过反射修改值 + 类型断言
+
+想改原变量，必须传**指针**，再用 `.Elem()` 解引用，得到可写的 `reflect.Value`。
+
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+type Age int
+
+func main() {
+	var age Age = 99
+
+	// 必须传 &age，再 Elem()，否则 CanSet() 为 false，改不了
+	val := reflect.ValueOf(&age).Elem()
+
+	// val.CanSet()  是否允许修改
+	// val.IsValid() 是否是有效的 reflect.Value
+	if val.CanSet() && val.IsValid() && val.Kind() == reflect.Int {
+		val.SetInt(10086) // 通过反射写入
+	}
+
+	// 类型断言：Interface() 先变成 any，再 .(Age) 还原成具体类型
+	v := val.Interface().(Age)
+
+	fmt.Println(val) // 10086（reflect.Value，打印时会显示内部值）
+	fmt.Println(age) // 10086（原变量已被改掉）
+	fmt.Println(v)   // 10086（断言回来的 Age）
+}
+```
+
+要点：
+
+1. **`reflect.ValueOf(age)` 得到的是副本**，`CanSet()` 为 `false`，`SetInt` 会 panic  
+2. **`reflect.ValueOf(&age).Elem()`** 才指向原变量，可以 `SetInt` / `SetString` / `Set`  
+3. 改之前先检查：`CanSet()`、`IsValid()`、`Kind()` 对不对  
+4. **类型断言**：`val.Interface().(Age)` 把反射世界里的值拿回静态类型，之后就能当普通 `Age` 用
+
+更稳妥的断言写法（带 `ok`）：
+
+```go
+v, ok := val.Interface().(Age)
+if !ok {
+	fmt.Println("断言失败")
+	return
+}
+fmt.Println(v)
+```
+
+### 21.3 通过反射调用方法
+
+给 `Age` 挂一个方法，再用方法名动态调用。
+
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+type Age int
+
+func (a Age) Say(params string, n int) {
+	fmt.Println(params, n)
+}
+
+func main() {
+	var age Age = 99
+	val := reflect.ValueOf(age)
+
+	m := val.MethodByName("Say") // 按名字找方法（必须导出，首字母大写）
+	if m.IsValid() {
+		m.Call([]reflect.Value{
+			reflect.ValueOf("我是字符串"),
+			reflect.ValueOf(123123),
+		})
+		// 输出：我是字符串 123123
+	}
+}
+```
+
+流程拆开看：
+
+| 步骤 | 代码 | 含义 |
+| --- | --- | --- |
+| 1 | `reflect.ValueOf(age)` | 拿到值的反射包装 |
+| 2 | `MethodByName("Say")` | 按名字找方法；找不到则 `IsValid()` 为 false |
+| 3 | `m.Call([]reflect.Value{...})` | 传入参数列表（每个参数都要先 `ValueOf`） |
+
+注意：
+
+- 方法名必须**导出**（大写开头），否则 `MethodByName` 找不到  
+- `Call` 的参数个数、类型要和方法签名一致，否则 panic  
+- 有返回值时，`Call` 会返回 `[]reflect.Value`，再按需 `Interface()` 取出来
+
+### 21.4 小结
+
+| 案例 | 核心 API | 用途 |
+| --- | --- | --- |
+| 判断 | `TypeOf` / `Name` / `Kind` | 运行时识别类型 |
+| 改值 | `ValueOf(&x).Elem()` + `SetInt` + `Interface().(T)` | 修改原变量，再断言回具体类型 |
+| 调方法 | `MethodByName` + `Call` | 按名字动态调用 |
+
+三板斧记牢：
+
+1. **看类型**用 `Type`，**动数据**用 `Value`  
+2. **要改值就传指针再 `Elem()`**  
+3. **反射进出都要装箱/拆箱**：进去 `ValueOf`，出来 `Interface()` + 类型断言
+
+## 22. Go Modules 与项目结构
+
+前面写的都是「单文件 `package main`」。真正做项目时，代码要拆成多个包、依赖要版本可控——这就靠 **Go Modules**。
+
+本篇按动手顺序来：
+
+1. `go mod init` 建模块  
+2. `go mod tidy` 整理依赖  
+3. 自定义包和导入路径  
+4. 大写导出 / 小写私有  
+5. `cmd`、`internal`、`pkg` 简单目录  
+6. 引入一个第三方依赖演示  
+
+### 22.1 go mod init：创建模块
+
+在空目录里初始化：
+
+```bash
+mkdir hello-mod
+cd hello-mod
+go mod init example.com/hello
+```
+
+会生成 `go.mod`：
+
+```go
+module example.com/hello
+
+go 1.26.4
+```
+
+| 字段 | 含义 |
+| --- | --- |
+| `module example.com/hello` | **模块路径**，也是包的导入前缀 |
+| `go 1.22` | 本模块使用的 Go 语言版本 |
+
+模块路径习惯写成「能当导入前缀」的名字，常见两种：
+
+- 学习演示：`example.com/hello`、`myapp`  
+- 真仓库：`github.com/你的用户名/仓库名`
+
+> `go.mod` 管的是**整个模块**（一个仓库通常一个），不是每个子目录一个。
+
+### 22.2 go mod tidy：整理依赖
+
+写完代码、增删 `import` 之后执行：
+
+```bash
+go mod tidy
+```
+
+它会：
+
+- 把代码里**真正用到**的依赖写进 `go.mod`，并生成/更新 `go.sum`（校验和）  
+- 删掉**已经不用**的依赖  
+
+记住分工：
+
+| 命令 | 什么时候用 |
+| --- | --- |
+| `go mod init` | 项目一开始，只跑一次 |
+| `go mod tidy` | 改过 import / 依赖后，随时跑 |
+
+`go.sum` 不要手改，提交到 Git 即可，用来保证大家下到同一份依赖。
+
+### 22.3 自定义包和导入路径
+
+目录名 ≈ 包名；导入路径 = **模块路径 + 子目录**。
+
+```text
+hello-mod/
+├── go.mod                 # module example.com/hello
+├── main.go                # package main
+└── greet/
+    └── greet.go           # package greet
+```
+
+`greet/greet.go`：
+
+```go
+package greet
+
+import "fmt"
+
+func Hello(name string) {
+	fmt.Println("你好,", name)
+}
+```
+
+根目录 `main.go`：
+
+```go
+package main
+
+import "example.com/hello/greet" // 模块路径 + 子目录
+
+func main() {
+	greet.Hello("小满")
+}
+```
+
+运行：
+
+```bash
+go run .
+# 你好, 小满
+```
+
+要点：
+
+- 导入写的是**路径**，不是文件名：`example.com/hello/greet`  
+- 调用时用**包名**：`greet.Hello(...)`（一般等于最后一级目录名）  
+- 同一个目录里所有 `.go` 必须是同一个 `package` 名  
+
+### 22.4 大写导出 / 小写私有
+
+Go **没有** `public` / `private` 关键字，靠首字母大小写：
+
+| 写法 | 可见范围 |
+| --- | --- |
+| `Hello`、`User`、`MaxRetry` | **导出**：别的包可以访问 |
+| `hello`、`user`、`maxRetry` | **未导出**：仅本包内部可用 |
+
+```go
+package greet
+
+import "fmt"
+
+// 导出：外部可调用
+func Hello(name string) {
+	fmt.Println(prefix(), name)
+}
+
+// 未导出：外部写 greet.prefix() 会编译失败
+func prefix() string {
+	return "你好,"
+}
+```
+
+外面只能：
+
+```go
+greet.Hello("小满") // OK
+// greet.prefix()  // 报错：prefix 未导出
+```
+
+结构体字段同样规则：`Name` 导出，`age` 仅包内可见（JSON 标签、跨包赋值都会受影响）。
+
+### 22.5 cmd、internal、pkg 简单目录
+
+小项目一个 `greet` 包就够。稍大一点，社区常见这种骨架：
+
+```text
+hello-mod/
+├── go.mod
+├── cmd/
+│   └── hello/
+│       └── main.go      # 可执行入口：go run ./cmd/hello
+├── internal/
+│   └── auth/
+│       └── auth.go      # 仅本模块能导入（编译器强制）
+└── pkg/
+    └── greeter/
+        └── greeter.go   # 可被外部模块导入的库代码
+```
+
+| 目录 | 放什么 | 谁能 import |
+| --- | --- | --- |
+| `cmd/<名字>/` | `package main`，程序入口 | 不作为库被导入，用来 `go build` / `go run` |
+| `internal/...` | 模块内部实现 | **只有本模块**（及 `internal` 的父树）能导入；外人导入会编译失败 |
+| `pkg/...` | 打算给别人用的库 | 任意模块都可导入 |
+
+`cmd/hello/main.go` 示例：
+
+```go
+package main
+
+import (
+	"example.com/hello/internal/auth"
+	"example.com/hello/pkg/greeter"
+)
+
+func main() {
+	auth.Check()
+	greeter.Hello("小满")
+}
+```
+
+`internal/auth/auth.go`：
+
+```go
+package auth
+
+import "fmt"
+
+func Check() {
+	fmt.Println("auth ok")
+}
+```
+
+`pkg/greeter/greeter.go`：
+
+```go
+package greeter
+
+import "fmt"
+
+func Hello(name string) {
+	fmt.Println("你好,", name)
+}
+```
+
+说明：
+
+- `internal` 是语言级约定：别的仓库 `import "example.com/hello/internal/auth"` 会直接报错  
+- `pkg` 不是强制的，很多项目把可导出库直接放在模块根下；放 `pkg` 只是「这里是对外 API」更清晰  
+- 入门项目不必硬套三层；**有多个可执行文件再用 `cmd`，有不想被外人用的代码再放 `internal`**
+
+### 22.6 引入第三方依赖演示
+
+#### 22.6.1 先配置国内代理（重要）
+
+默认的官方代理 `proxy.golang.org` 在国内经常超时或拉不下来。拉第三方库之前，建议先把模块代理改成国内镜像。
+
+推荐使用七牛云维护的 **[https://goproxy.cn](https://goproxy.cn)**：
+
+```bash
+# 永久生效（推荐）
+go env -w GO111MODULE=on
+go env -w GOPROXY=https://goproxy.cn,direct
+```
+
+验证是否设置成功：
+
+```bash
+go env GOPROXY
+# 应输出：https://goproxy.cn,direct
+```
+
+说明：
+
+| 写法 | 含义 |
+| --- | --- |
+| `https://goproxy.cn` | 优先走国内代理下载模块 |
+| `,direct` | 代理没有时，再直连源站（如 GitHub） |
+
+也可以临时设置（只对当前终端有效）：
+
+```bash
+# Windows PowerShell
+$env:GOPROXY = "https://goproxy.cn,direct"
+
+# macOS / Linux
+export GOPROXY=https://goproxy.cn,direct
+```
+
+其他可选镜像（备用）：
+
+| 代理地址 | 说明 |
+| --- | --- |
+| `https://goproxy.cn,direct` | **首选**，七牛云，国内最常用 |
+| `https://proxy.golang.com.cn,direct` | 官方域名的国内镜像站 |
+| `https://goproxy.io,direct` | 另一家公共代理 |
+
+公司私有仓库不要走公共代理时，可再加：
+
+```bash
+go env -w GOPRIVATE=git.公司域名.com
+```
+
+#### 22.6.2 演示：安装并使用第三方库
+
+以常用的颜色输出库 [`github.com/fatih/color`](https://github.com/fatih/color) 为例。
+
+在 `main.go`（或 `cmd/hello/main.go`）里先写上 import 和用法：
+
+```go
+package main
+
+import (
+	"github.com/fatih/color"
+)
+
+func main() {
+	color.Green("go mod 依赖引入成功")
+	color.Red("这是红色警告")
+}
+```
+
+然后拉依赖并整理：
+
+```bash
+go get github.com/fatih/color
+go mod tidy
+```
+
+`go.mod` 里会出现类似：
+
+```go
+module example.com/hello
+
+go 1.22
+
+require github.com/fatih/color v1.18.0
+```
+
+再运行：
+
+```bash
+go run .
+# 终端里会看到绿色 / 红色文字
+```
+
+常用依赖命令：
+
+| 命令 | 作用 |
+| --- | --- |
+| `go get 路径@版本` | 添加或升级某个依赖，如 `@v1.18.0`、`@latest` |
+| `go mod tidy` | 按实际 import 增删依赖 |
+| `go list -m all` | 查看当前模块解析到的依赖树 |
+
+换依赖时：改代码里的 `import` → `go get`（可选）→ `go mod tidy`。
+
+### 22.7 小结
+
+| 主题 | 记住什么 |
+| --- | --- |
+| `go mod init` | 定模块路径，生成 `go.mod` |
+| `go mod tidy` | 按代码同步依赖与 `go.sum` |
+| 导入路径 | `模块路径 + 子目录` |
+| 导出规则 | 大写对外，小写包内 |
+| `cmd` / `internal` / `pkg` | 入口 / 私有实现 / 对外库 |
+| 第三方库 | 先配 `GOPROXY=https://goproxy.cn,direct`，再 `go get` + import + `tidy` |
+
+最小心智模型：
+
+> **一个 `go.mod` = 一个模块；一个目录 = 一个包；导入靠路径，可见性靠大小写。**
+
+## 23. Go Http标准库
+
+Go 自带 `net/http`，不用额外框架，就能写 HTTP 服务。底层每个请求一个 goroutine，默认并发很强。
+
+本篇按动手顺序来：
+
+1. `http.NewServeMux` + `HandleFunc` 注册路由（重点：第一个参数 = 请求方式 + 路径）  
+2. 启动服务  
+3. `w.Write` 返回字符串（以及 `[]byte` 转换）  
+4. 返回 JSON：`json.NewEncoder(w).Encode(...)`  
+5. 带查询参数的用户列表搜索  
+
+### 23.1 创建路由：NewServeMux + HandleFunc
+
+`ServeMux` 是路由器：根据**请求方式**和**路径**，把请求交给对应处理函数。
+
+```go
+mux := http.NewServeMux()
+mux.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+	// 处理 /hello
+})
+```
+
+| API | 作用 |
+| --- | --- |
+| `http.NewServeMux()` | 新建一个路由器 |
+| `mux.HandleFunc(pattern, 处理函数)` | 用第一个参数 `pattern` 匹配请求，命中则执行处理函数 |
+
+处理函数签名固定：
+
+```go
+func(w http.ResponseWriter, r *http.Request)
+```
+
+- `w`：用来**写响应**（状态码、Header、Body）  
+- `r`：用来**读请求**（方法、路径、Query、Body）
+
+> 也可以用包级函数 `http.HandleFunc(...)`，它挂在默认的 `DefaultServeMux` 上。自己 `NewServeMux()` 更清晰，推荐项目里用独立 mux。
+
+#### 23.1.1 HandleFunc 的第一个参数：pattern
+
+签名可以看成：
+
+```go
+mux.HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request))
+```
+
+**第一个参数 `pattern` 不是随便写的字符串**，它描述「什么样的请求才进这个处理函数」。
+
+Go 1.22 起，`pattern` 的常见写法是：
+
+```text
+[请求方式 ]路径
+```
+
+中间有一个空格：前面是 HTTP 方法（可省略），后面是路径。
+
+##### 23.1.1.1 只写路径（不限制方法）
+
+```go
+mux.HandleFunc("/hello", handler)
+```
+
+含义：只要路径是 `/hello`，**不管**是 GET、POST 还是 DELETE，都会进这个函数。
+
+适合入门演示；正式接口更建议把方法写上，避免误匹配。
+
+##### 23.1.1.2 请求方式 + 路径（推荐）
+
+```go
+mux.HandleFunc("GET /hello", handler)   // 只匹配 GET /hello
+mux.HandleFunc("POST /hello", handler)  // 只匹配 POST /hello
+mux.HandleFunc("PUT /user", handler)
+mux.HandleFunc("DELETE /user", handler)
+```
+
+| pattern | 匹配什么 |
+| --- | --- |
+| `"/hello"` | 任意方法 + 路径 `/hello` |
+| `"GET /hello"` | 仅 GET（以及 HEAD）+ `/hello` |
+| `"POST /hello"` | 仅 POST + `/hello` |
+| `"GET /user/{id}"` | GET，路径形如 `/user/1`，可用 `r.PathValue("id")` 取 `"1"` |
+
+常见请求方式：
+
+| 方法 | 一般用途 |
+| --- | --- |
+| `GET` | 查数据（浏览器地址栏、`<a>` 默认就是 GET） |
+| `POST` | 新建 / 提交表单 |
+| `PUT` / `PATCH` | 更新 |
+| `DELETE` | 删除 |
+
+同一个路径、不同方法，可以挂不同处理函数：
+
+```go
+mux.HandleFunc("GET /user", listUser)    // 查列表
+mux.HandleFunc("POST /user", createUser) // 新建
+```
+
+若只注册了 `GET /user`，却用 POST 访问，ServeMux 会自动回 **405 Method Not Allowed**（方法不对），不用你自己先判断。
+
+##### 23.1.1.3 路径里的通配（可选）
+
+```go
+mux.HandleFunc("GET /user/{id}", func(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id") // /user/1 → "1"
+	fmt.Fprint(w, "用户 id = ", id)
+})
+```
+
+注意和 Query 的区别：
+
+| 写法 | 例子 | 怎么取 |
+| --- | --- | --- |
+| 路径参数 | `/user/1` | `r.PathValue("id")`（pattern 里要有 `{id}`） |
+| 查询参数 | `/user/list?id=1` | `r.URL.Query().Get("id")` |
+
+后面搜索案例用的是 **Query**；路径参数知道有这回事即可。
+
+##### 23.1.1.4 一眼对照
+
+```go
+mux := http.NewServeMux()
+
+// 第一个参数 = 请求方式 + 空格 + 路径
+mux.HandleFunc("GET /hello", func(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("hello get"))
+})
+mux.HandleFunc("POST /hello", func(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("hello post"))
+})
+```
+
+浏览器打开 `http://localhost:8080/hello` 走的是 **GET**；用 Postman / curl 发 POST 才会进第二个处理函数。
+
+> 需要 Go **1.22+**。`go.mod` 里 `go 1.22`（或更高）才支持 `"GET /path"` 这种写法；更老的版本把 `"GET /path"` 会理解错，路由对不上。
+
+### 23.2 创建并启动服务
+
+把 mux 交给 `http.ListenAndServe`：
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "hello")
+	})
+
+	fmt.Println("服务启动：http://localhost:8080")
+	err := http.ListenAndServe(":8080", mux)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+- `":8080"`：监听本机 8080 端口  
+- 第二个参数传 `mux`；若传 `nil`，则用默认的 `DefaultServeMux`  
+- 浏览器访问：`http://localhost:8080/hello`
+
+### 23.3 返回字符串：Write 与 []byte 转换
+
+`ResponseWriter.Write` 的签名是：
+
+```go
+Write([]byte) (int, error)
+```
+
+它只收 **`[]byte`**，不直接收 `string`。所以要先转换：
+
+```go
+mux.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+	msg := "你好，小满"
+	w.Write([]byte(msg)) // string → []byte
+})
+```
+
+`[]byte(字符串)` 是类型转换（有人叫它「语法糖」）：把字符串变成字节切片，内存里就是那段 UTF-8 字节。
+
+反过来：
+
+```go
+b := []byte("abc")
+s := string(b) // []byte → string
+```
+
+更省事的写法（内部一样会写到 `w`）：
+
+```go
+fmt.Fprint(w, "你好，小满")
+io.WriteString(w, "你好，小满")
+```
+
+入门先记住：`Write` 要 `[]byte`，字符串用 `[]byte("...")` 包一下。
+
+### 23.4 返回 JSON
+
+接口常见做法：设 `Content-Type`，再用 `json.NewEncoder(w).Encode(...)` 直接往响应里写 JSON。
+
+注意大小写（你草稿里的写法对照）：
+
+| 你写的 | 正确写法 |
+| --- | --- |
+| `json.newEncode(w).encode()` | `json.NewEncoder(w).Encode(...)` |
+| `type User stauct` | `type User struct` |
+
+完整例子：
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+)
+
+type User struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+func main() {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
+		u := User{Id: 1, Name: "小满"}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		err := json.NewEncoder(w).Encode(u)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	})
+
+	fmt.Println("服务启动：http://localhost:8080")
+	http.ListenAndServe(":8080", mux)
+}
+```
+
+访问 `http://localhost:8080/user`，响应大致是：
+
+```json
+{"id":1,"name":"小满"}
+```
+
+拆开看：
+
+1. `` `json:"id"` ``：JSON 字段名用小写 `id`（字段本身仍要大写才能导出）  
+2. `w.Header().Set("Content-Type", ...)`：告诉客户端这是 JSON  
+3. `json.NewEncoder(w)`：创建一个往 `w` 写的编码器  
+4. `.Encode(u)`：序列化并写入响应（末尾会自动加换行）
+
+也可以先 `json.Marshal` 再 `w.Write`，效果类似；`NewEncoder(w).Encode` 少一次中间变量，写接口更常见。
+
+### 23.5 案例：按 id 搜索用户列表
+
+目标地址：
+
+```text
+http://localhost:8080/user/list?id=1
+```
+
+你草稿里的几处要改：
+
+| 你写的 | 问题 | 正确写法 |
+| --- | --- | --- |
+| `r.URL.Query.Get("id")` | `Query` 是**方法**，要加 `()` | `r.URL.Query().Get("id")` |
+| `item.Id == targetId` | `Get` 得到的是 **string**，`Id` 是 **int**，不能直接比 | 先 `strconv.Atoi` |
+| `stauct` | 拼写错误 | `struct` |
+
+完整可运行示例：
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
+)
+
+type User struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+var userList = []User{
+	{Id: 1, Name: "小满"},
+	{Id: 2, Name: "张三"},
+	{Id: 3, Name: "李四"},
+}
+
+func main() {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/user/list", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+		idStr := r.URL.Query().Get("id") // ?id=1 → "1"
+
+		// 没传 id：返回全部
+		if idStr == "" {
+			json.NewEncoder(w).Encode(userList)
+			return
+		}
+
+		targetId, err := strconv.Atoi(idStr) // string → int
+		if err != nil {
+			http.Error(w, "id 必须是数字", http.StatusBadRequest)
+			return
+		}
+
+		result := make([]User, 0)
+		for _, item := range userList {
+			if item.Id == targetId {
+				result = append(result, item)
+			}
+		}
+
+		json.NewEncoder(w).Encode(result)
+	})
+
+	fmt.Println("服务启动：http://localhost:8080")
+	http.ListenAndServe(":8080", mux)
+}
+```
+
+试一下：
+
+| 请求 | 结果 |
+| --- | --- |
+| `/user/list` | 全部用户 |
+| `/user/list?id=1` | `[{"id":1,"name":"小满"}]` |
+| `/user/list?id=99` | `[]`（没有匹配） |
+| `/user/list?id=abc` | 400，提示 id 必须是数字 |
+
+`r.URL.Query()` 返回 `url.Values`（本质是 `map[string][]string`），`.Get("id")` 取第一个值；没有该参数时返回空字符串 `""`。
+
+### 23.6 小结
+
+| 主题 | 记住什么 |
+| --- | --- |
+| 路由 | `NewServeMux` + `HandleFunc`；第一个参数是 `"[METHOD ]路径"`，如 `"GET /hello"` |
+| 启动 | `ListenAndServe(":8080", mux)` |
+| 写文本 | `w.Write([]byte("..."))` |
+| 写 JSON | `Header` 设 Content-Type + `json.NewEncoder(w).Encode(v)` |
+| 结构体标签 | `` Id int `json:"id"` ``，字段要导出 |
+| Query | `r.URL.Query().Get("id")`，和 int 比较前先 `Atoi` |
+
+最小流程：
+
+> **mux 注册路径 → ListenAndServe 启动 → 处理函数里读 `r`、写 `w`。**
