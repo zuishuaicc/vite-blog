@@ -1,13 +1,13 @@
 import { fruitesIcon } from "./fruitesIcon";
-// 依次获取图标
-let fruites: Array<string> = JSON.parse(JSON.stringify(fruitesIcon));
-function getIcon() {
-  if (!fruites.length) {
-    fruites = JSON.parse(JSON.stringify(fruitesIcon));
-  }
-  const icon = fruites.shift();
-  return icon;
+
+// 循环取图标：状态封装在闭包内，取模天然循环
+function createIconPicker(icons: readonly string[]) {
+  let index = 0;
+  return () => icons[index++ % icons.length];
 }
+
+const getIcon = createIconPicker(fruitesIcon);
+
 export const sidebar = [
   {
     text: "使用样例",
@@ -230,6 +230,10 @@ export const sidebar = [
               {
                 text: getIcon() + "Gin框架",
                 link: "/views/backend/golang/golang-gin",
+              },
+              {
+                text: getIcon() + "Gin Web",
+                link: "/views/backend/golang/Gin-web",
               },
             ],
           },
