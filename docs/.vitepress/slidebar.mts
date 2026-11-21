@@ -233,7 +233,7 @@ export const sidebar = [
               },
               {
                 text: getIcon() + "Gin Web",
-                link: "/views/backend/golang/Gin-web",
+                link: "/views/backend/golang/gin-web",
               },
             ],
           },
